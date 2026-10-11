@@ -1,0 +1,143 @@
+"use strict";
+const $ = id => document.getElementById(id);
+let tabId;
+let host;
+let state;
+let busy = false;
+
+function renderTips(enabled) {
+  $("tips-toggle").setAttribute("aria-pressed", String(enabled));
+  $("tips-toggle").textContent = enabled ? "Dicas ativadas" : "Dicas desativadas";
+}
+$("welcome-dismiss").addEventListener("click", () => {
+  $("welcome").hidden = true;
+  void chrome.storage.local.set({ "help:welcomeSeen": true });
+});
+$("tips-toggle").addEventListener("click", async () => {
+  const enabled = $("tips-toggle").getAttribute("aria-pressed") !== "true";
+  $("tips-toggle").disabled = true;
+  try {
+    await chrome.storage.local.set({ "help:enabled": enabled });
+    renderTips(enabled);
+    $("feedback").textContent = enabled ? "Dicas ativadas. Os avisos aparecem apenas quando há uma camada suspeita." : "Dicas desativadas. Você ainda pode ativar a proteção pela carinha.";
+  } catch { $("feedback").textContent = "Não foi possível salvar sua preferência de dicas."; }
+  finally { $("tips-toggle").disabled = false; }
+});
+chrome.storage.local.get(["help:welcomeSeen", "help:enabled"]).then(stored => {
+  $("welcome").hidden = stored["help:welcomeSeen"] === true;
+  renderTips(stored["help:enabled"] !== false);
+}).catch(() => {});
+chrome.storage.onChanged.addListener((changes, area) => {
+  if (area !== "local") return;
+  if (changes["help:enabled"]) renderTips(changes["help:enabled"].newValue !== false);
+  if (changes["help:welcomeSeen"]?.newValue === true) $("welcome").hidden = true;
+});
+
+function render(next) {
+  state = next;
+  $("hostname").textContent = host;
+  $("enabled").setAttribute("aria-pressed", String(next.enabled));
+  $("enabled").setAttribute("aria-label", next.enabled ? "Desativar proteção nesta página" : "Ativar proteção nesta página");
+  const face = `icons/face-${next.enabled ? "active" : "inactive"}.svg`;
+  $("activation-face").src = face;
+  $("brand-face").src = face;
+  $("toggle-hint").textContent = next.enabled ? "Toque na carinha para desativar" : "Toque na carinha para ativar";
+  $("enabled").disabled = busy;
+  $("compatibility").checked = next.compatibility === true;
+  $("compatibility").disabled = busy;
+  const pill = $("status-pill");
+  if (pill) {
+    pill.textContent = next.enabled ? "Ativo" : "Desativado";
+    pill.className = `status-pill ${next.enabled ? "active" : "paused"}`;
+  }
+  $("state-label").textContent = next.enabled ? "Proteção ativa" : "Proteção desativada";
+  $("hidden").textContent = next.hidden;
+  $("blocked").textContent = next.blocked + (next.blockedPopups || 0);
+  $("scan").disabled = busy || !next.enabled;
+  $("pick").disabled = busy || !next.enabled;
+  $("restore").disabled = busy || !next.enabled && !next.hidden;
+  $("description").textContent = next.enabled ? "Segue neste site. Pausa ao trocar de aba." : "Ative manualmente para proteger este site nesta aba.";
+}
+
+async function readStatus() {
+  const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
+  if (!next?.ready) throw new Error("A proteção ainda está iniciando. Reabra o painel em instantes.");
+  render(next);
+}
+
+async function toggle(enabled) {
+  const result = await chrome.runtime.sendMessage({ type: "SET_PAGE_ENABLED", tabId, enabled, documentId: state.documentId, pageUrl: state.pageUrl });
+  if (!result?.ok) throw new Error(result?.error || "Não foi possível alterar a proteção desta página.");
+  for (let attempt = 0; attempt < 15; attempt++) {
+    await new Promise(resolve => setTimeout(resolve, 60));
+    const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
+    if (next?.ready && next.enabled === enabled) { render(next); return; }
+  }
+  throw new Error("Reabra o painel para conferir a proteção desta página.");
+}
+
+async function act(work) {
+  busy = true;
+  render(state);
+  try { await work(); } catch (error) { $("feedback").textContent = error.message; }
+  finally { try { await readStatus(); } catch { /* Keep the last known state. */ } busy = false; render(state); }
+}
+
+$("enabled").addEventListener("click", () => {
+  const enabled = !state.enabled;
+  state = { ...state, enabled };
+  void act(async () => { await toggle(enabled); $("feedback").textContent = enabled ? "Proteção ativada para navegar neste site nesta aba." : "Proteção desativada e elementos restaurados."; });
+});
+$("compatibility").addEventListener("change", event => {
+  const compatibility = event.target.checked;
+  state = { ...state, compatibility };
+  void act(async () => {
+    const key = `site:${host}`;
+    const stored = await chrome.storage.local.get(key);
+    await chrome.storage.local.set({ [key]: { ...stored[key], compatibility } });
+    for (let attempt = 0; attempt < 15; attempt++) {
+      await new Promise(resolve => setTimeout(resolve, 60));
+      const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
+      if (next?.ready && next.compatibility === compatibility) { render(next); break; }
+    }
+    $("feedback").textContent = compatibility ? "Destravamento ativado. Recarregue a página se o vídeo não iniciar." : "Destravamento desativado.";
+  });
+});
+$("scan").addEventListener("click", () => void act(async () => {
+  await chrome.tabs.sendMessage(tabId, { type: "SCAN" }, { frameId: 0 });
+  await new Promise(resolve => setTimeout(resolve, 300));
+  await readStatus();
+  $("feedback").textContent = "Verificação solicitada. Páginas maiores podem levar mais tempo.";
+}));
+$("pick").addEventListener("click", () => void act(async () => {
+  await chrome.tabs.sendMessage(tabId, { type: "PICK" }, { frameId: 0 });
+  window.close();
+}));
+$("restore").addEventListener("click", () => void act(async () => {
+  await toggle(false);
+  $("feedback").textContent = "Elementos restaurados. Proteção desativada nesta página.";
+}));
+
+(async () => {
+  try {
+    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+    if (!tab?.url || !/^https?:/.test(tab.url)) throw new Error("Abra um site HTTP ou HTTPS para usar a proteção.");
+    tabId = tab.id;
+    host = new URL(tab.url).hostname;
+    for (let attempt = 0; attempt < 20; attempt++) {
+      try { await readStatus(); break; }
+      catch (error) {
+        if (attempt === 19) throw error;
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+    }
+  } catch (error) {
+    $("hostname").textContent = "Página indisponível";
+    $("state-label").textContent = "Proteção indisponível";
+    $("status-pill").textContent = "Indisponível";
+    $("status-pill").className = "status-pill";
+    $("toggle-hint").textContent = "Abra uma página para usar a proteção";
+    $("description").textContent = "Após instalar a extensão, recarregue as abas que já estavam abertas.";
+    $("feedback").textContent = error.message;
+  }
+})();

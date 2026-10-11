@@ -1,0 +1,26 @@
+{
+  "manifest_version": 3,
+  "name": "Clique Limpo",
+  "version": "1.0.0",
+  "description": "Proteção manual por aba contra cliques invisíveis, pop-ups e rastreadores, com controles para players e dicas locais.",
+  "minimum_chrome_version": "119",
+  "permissions": ["storage", "declarativeNetRequestWithHostAccess", "webNavigation"],
+  "host_permissions": ["http://*/*", "https://*/*"],
+  "background": { "service_worker": "background.js" },
+  "icons": { "16": "icons/16.png", "32": "icons/32.png", "48": "icons/48.png", "128": "icons/128.png" },
+  "action": { "default_title": "Clique Limpo — desativado", "default_popup": "popup.html", "default_icon": { "16": "icons/inactive/16.png", "32": "icons/inactive/32.png" } },
+  "content_scripts": [{
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["popup-guard.js"],
+    "all_frames": true,
+    "match_origin_as_fallback": true,
+    "run_at": "document_start",
+    "world": "MAIN"
+  }, {
+    "matches": ["http://*/*", "https://*/*"],
+    "js": ["detector.js", "tips.js", "content.js"],
+    "all_frames": true,
+    "match_origin_as_fallback": true,
+    "run_at": "document_start"
+  }]
+}

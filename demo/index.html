@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Laboratório • Clique Limpo</title>
+<style>
+:root{font-family:system-ui;color:#e5f0f1;background:#101b21}*{box-sizing:border-box}body{margin:0;padding:50px 24px}main{max-width:880px;margin:auto}.eyebrow{color:#76e9bd;font-size:12px;letter-spacing:2px}h1{font-size:48px;letter-spacing:-2px;margin:18px 0}p{color:#a3b9c0;line-height:1.7}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:28px 0}section{background:#192a33;border:1px solid #334a55;border-radius:14px;padding:24px}h2{font-size:18px}button,a{font:inherit;color:#0f3025;background:#77edc0;padding:12px 16px;border:0;border-radius:8px;cursor:pointer;display:inline-block;text-decoration:none;margin:4px 0}button.secondary{background:#324c5b;color:#e7f3f5}output{display:block;margin-top:15px;color:#76e9bd;font-size:12px}.note{font-size:12px;border-top:1px solid #334a55;padding-top:20px}dialog{border:1px solid #5c827e;border-radius:16px;background:#172b2e;color:white;padding:28px;max-width:420px}dialog::backdrop{background:#0008}@media(max-width:680px){.grid{grid-template-columns:1fr}h1{font-size:36px}}
+</style></head><body><main>
+<span class="eyebrow">CLIQUE LIMPO / LABORATÓRIO LOCAL</span><h1>O clique deve ser seu.</h1><p>Teste as camadas invisíveis sem acessar páginas de anúncios reais. Instale a extensão e recarregue esta página antes de começar.</p>
+<div class="grid"><section><h2>01. Camada transparente</h2><p>Cria uma camada que cobre a página. Se ela receber um clique, o contador de anúncios sobe.</p><button id="overlay">Criar armadilha</button><output id="ads">Cliques recebidos pela armadilha: 0</output></section>
+<section><h2>02. Conteúdo legítimo</h2><p>Botões, links visíveis e diálogos devem continuar funcionando.</p><button id="normal">Botão normal</button><button id="dialog" class="secondary">Abrir diálogo</button><output id="normal-count">Cliques normais: 0</output></section>
+<section><h2>03. Elemento visível</h2><p>Use “Escolher elemento para ocultar” no painel da extensão para remover este cartão ou outro elemento.</p><span>Este texto faz parte da página e não é um anúncio.</span></section>
+<section><h2>04. Rastreamento separado</h2><p>Ative a opção de rastreamento no painel. O bloqueio é independente das camadas invisíveis.</p><p>Esta demonstração não envia dados a serviços de análise.</p></section></div>
+<p class="note">O painel permite restaurar os elementos e pausar a proteção neste site. Remoções manuais valem somente para esta visita.</p>
+</main><dialog id="legitimate"><h2>Diálogo legítimo</h2><p>A proteção deve preservar esta janela. Ela tem conteúdo visível e uma função clara.</p><button id="close">Fechar</button></dialog>
+<script>
+let ads=0, normal=0;
+document.getElementById('overlay').onclick=()=>{const trap=document.createElement('a');trap.href='#anuncio';trap.id='armadilha';trap.style.cssText='position:fixed;inset:0;z-index:9999;background:transparent;';trap.addEventListener('click',e=>{e.preventDefault();document.getElementById('ads').textContent=`Cliques recebidos pela armadilha: ${++ads}`;trap.remove();});document.body.append(trap);};
+document.getElementById('normal').onclick=()=>{document.getElementById('normal-count').textContent=`Cliques normais: ${++normal}`;};
+document.getElementById('dialog').onclick=()=>document.getElementById('legitimate').showModal();
+document.getElementById('close').onclick=()=>document.getElementById('legitimate').close();
+</script></body></html>

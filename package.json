@@ -1,0 +1,18 @@
+{
+  "name": "clique-limpo-dev",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Testes e demonstração local da extensão Clique Limpo",
+  "scripts": {
+    "test": "node --test tests/extension.test.cjs tests/popup-design.test.cjs tests/page-activation.test.cjs tests/tips.test.cjs",
+    "demo": "node demo/server.cjs",
+    "check": "node scripts/check.cjs",
+    "test:design": "node --test tests/popup-design.test.cjs",
+    "test:pages": "node --test tests/page-activation.test.cjs",
+    "test:tips": "node --test tests/tips.test.cjs",
+    "icons": "node scripts/make-icons.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.63.0"
+  }
+}

@@ -1,0 +1,176 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const http = require('node:http');
+const os = require('node:os');
+const path = require('node:path');
+const { chromium } = require('playwright');
+
+test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repetição', { timeout: 120000 }, async t => {
+  const trap = '<a id="trap" href="#ad" style="position:fixed;inset:0;z-index:1000"></a>';
+  const server = http.createServer((request, response) => {
+    response.setHeader('Content-Type', 'text/html; charset=utf-8');
+    response.setHeader('Cache-Control', 'no-store');
+    response.end(`<!doctype html><meta charset="utf-8"><title>Teste das dicas</title>
+      <style>body{font:16px Arial;background:#f4f3ef;color:#292929;margin:50px}h1{font-size:26px}button{padding:12px}iframe{width:700px;height:400px}</style>
+      <script>window.siteClicks=0;document.addEventListener('click',()=>window.siteClicks++,true);</script>
+      <h1>Uma página com conteúdo</h1><p>Uma dica discreta para entender a proteção.</p><button id="normal">Conteúdo normal</button>
+      ${request.url.startsWith('/trap') || request.url === '/frame' ? trap : ''}
+      ${request.url === '/embedded' ? '<iframe src="/frame"></iframe>' : ''}`);
+  });
+  await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
+  const address = `http://exemplo.test:${server.address().port}`;
+  const otherAddress = `http://outro.test:${server.address().port}`;
+  const profile = fs.mkdtempSync(path.join(os.tmpdir(), 'clique-limpo-tips-'));
+  let context;
+  try {
+    const extension = path.resolve(__dirname, '../clique-limpo');
+    context = await chromium.launchPersistentContext(profile, {
+      ...(process.env.CLIQUE_LIMPO_BROWSER ? { executablePath: process.env.CLIQUE_LIMPO_BROWSER } : { channel: 'msedge' }),
+      headless: true, ignoreDefaultArgs: ['--disable-extensions'],
+      args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--host-resolver-rules=MAP exemplo.test 127.0.0.1, MAP outro.test 127.0.0.1']
+    });
+    context.setDefaultTimeout(10000);
+    const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
+    const extensionId = new URL(worker.url()).hostname;
+    const page = await context.newPage();
+    await page.setViewportSize({ width: 1000, height: 720 });
+    await page.goto(`${address}/normal`);
+    const id = await worker.evaluate(async address => (await chrome.tabs.query({})).find(tab => tab.url?.startsWith(address)).id, address);
+    const status = () => worker.evaluate(id => chrome.tabs.sendMessage(id, { type: 'STATUS' }, { frameId: 0 }), id);
+    const waitForState = async enabled => {
+      for (let attempt = 0; attempt < 150; attempt++) {
+        const state = await status();
+        if (state.ready && state.enabled === enabled) return state;
+        await new Promise(resolve => setTimeout(resolve, 30));
+      }
+      throw new Error('Estado de proteção não confirmado');
+    };
+    const hint = () => page.locator('[data-clique-limpo-ui="hint"]');
+    const screenshots = path.resolve(__dirname, '../test-results');
+    fs.mkdirSync(screenshots, { recursive: true });
+    const freshHints = () => worker.evaluate(async () => {
+      await chrome.storage.local.set({ 'help:enabled': true, 'help:sites': {} });
+      await chrome.storage.session.remove('help:lastShown');
+    });
+    const openPopup = async () => {
+      const popup = await context.newPage();
+      await popup.setViewportSize({ width: 380, height: 600 });
+      await page.bringToFront();
+      await popup.goto(`chrome-extension://${extensionId}/popup.html`);
+      await popup.waitForFunction(() => !document.getElementById('enabled').disabled);
+      return popup;
+    };
+
+    await t.test('boas-vindas aparecem só na primeira abertura; página normal não recebe alerta', async () => {
+      await waitForState(false);
+      const popup = await openPopup();
+      await popup.locator('#welcome').waitFor({ state: 'visible' });
+      await popup.locator('body').screenshot({ path: path.join(screenshots, 'design-welcome.png') });
+      await popup.locator('#welcome-dismiss').click();
+      assert.equal(await popup.locator('#welcome').isVisible(), false);
+      await popup.close();
+      const reopened = await openPopup();
+      await reopened.waitForFunction(() => document.getElementById('welcome').hidden);
+      await reopened.close();
+      await page.waitForTimeout(2400);
+      assert.equal(await hint().count(), 0);
+      assert.equal((await status()).enabled, false);
+    });
+
+    await t.test('camada transparente sugere ativação; clique no aviso é protegido', async () => {
+      await page.goto(`${address}/trap`);
+      await hint().waitFor({ state: 'visible' });
+      assert.equal((await status()).enabled, false);
+      assert.deepEqual(await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules()), []);
+      assert.notEqual(await page.locator('#trap').evaluate(el => getComputedStyle(el).display), 'none');
+      await page.screenshot({ path: path.join(screenshots, 'design-page-tip.png') });
+      await hint().screenshot({ path: path.join(screenshots, 'design-tip-card.png') });
+      await hint().locator('.activate').click();
+      await waitForState(true);
+      await hint().waitFor({ state: 'detached' });
+      await page.waitForFunction(() => getComputedStyle(document.getElementById('trap')).display === 'none');
+      assert.equal(await page.evaluate(() => window.siteClicks), 0, 'O site não recebe o clique de ativação do aviso');
+      assert.equal((await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).length, 3);
+      const state = await status();
+      await worker.evaluate(message => enqueue(() => setPageEnabled(message)), { tabId: id, documentId: state.documentId, pageUrl: state.pageUrl, enabled: false });
+      await waitForState(false);
+      await page.waitForTimeout(2100);
+      assert.equal(await hint().count(), 0, 'Pausar manualmente não provoca uma nova dica');
+    });
+
+    await t.test('Agora não mantém desligado e os limites evitam repetição', async () => {
+      await freshHints();
+      await page.goto(`${address}/trap?dismiss`);
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.later').click();
+      await hint().waitFor({ state: 'detached' });
+      assert.equal((await status()).enabled, false);
+      assert.equal(await page.evaluate(() => window.siteClicks), 0);
+      await page.reload();
+      await page.waitForTimeout(2400);
+      assert.equal(await hint().count(), 0, 'Mesmo site não repete a dica durante sete dias');
+      await page.goto(`${otherAddress}/trap`);
+      await page.waitForTimeout(2400);
+      assert.equal(await hint().count(), 0, 'Outro site respeita o intervalo global de dez minutos');
+      await worker.evaluate(() => chrome.storage.session.set({ 'help:lastShown': Date.now() - 11 * 60 * 1000 }));
+      await page.reload();
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.later').click();
+      await page.goto(`${address}/trap`);
+      await worker.evaluate(() => chrome.storage.session.set({ 'help:lastShown': Date.now() - 11 * 60 * 1000 }));
+      await page.reload();
+      await page.waitForTimeout(2400);
+      assert.equal(await hint().count(), 0, 'O limite por site continua válido após o intervalo global');
+    });
+
+    await t.test('dicas podem ser desativadas e reativadas pelo painel, inclusive para camadas tardias', async () => {
+      await freshHints();
+      await page.goto(`${address}/trap?mute`);
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.mute').click();
+      await hint().waitFor({ state: 'detached' });
+      assert.equal(await worker.evaluate(async () => (await chrome.storage.local.get('help:enabled'))['help:enabled']), false);
+      await page.reload();
+      await page.waitForTimeout(2300);
+      assert.equal(await hint().count(), 0);
+      await page.goto(`${address}/normal`);
+      await worker.evaluate(async () => {
+        await chrome.storage.local.remove('help:sites');
+        await chrome.storage.session.remove('help:lastShown');
+      });
+      const popup = await openPopup();
+      assert.equal(await popup.locator('#tips-toggle').getAttribute('aria-pressed'), 'false');
+      await popup.locator('#tips-toggle').click();
+      assert.equal(await popup.locator('#tips-toggle').getAttribute('aria-pressed'), 'true');
+      await popup.close();
+      await page.waitForTimeout(2200);
+      assert.equal(await hint().count(), 0);
+      await page.evaluate(html => document.body.insertAdjacentHTML('beforeend', html), trap);
+      await hint().waitFor({ state: 'visible', timeout: 12000 });
+      await hint().locator('.activate').focus();
+      await page.keyboard.press('Space');
+      await waitForState(true);
+      assert.equal(await page.evaluate(() => window.siteClicks), 0, 'Ativação pelo teclado também não vaza para o site');
+    });
+
+    await t.test('uma camada dentro de iframe produz somente um aviso na página principal', async () => {
+      await freshHints();
+      // Change origin first to explicitly leave the previously armed site.
+      await page.goto(`${otherAddress}/normal`);
+      await page.goto(`${address}/embedded`);
+      await waitForState(false);
+      await hint().waitFor({ state: 'visible' });
+      assert.equal(await hint().count(), 1);
+      const frame = page.frames().find(frame => frame.url().endsWith('/frame'));
+      assert.equal(await frame.locator('[data-clique-limpo-ui="hint"]').count(), 0);
+      await hint().locator('.later').click();
+    });
+  } finally {
+    if (context) await context.close();
+    await new Promise(resolve => server.close(resolve));
+    const relative = path.relative(os.tmpdir(), profile);
+    if (!relative.startsWith('clique-limpo-tips-') || relative.includes(path.sep) || path.isAbsolute(relative)) throw new Error('Perfil de teste fora do destino esperado');
+    fs.rmSync(profile, { recursive: true, force: true });
+  }
+});

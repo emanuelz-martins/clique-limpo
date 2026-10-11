@@ -1,0 +1,12 @@
+[
+  {
+    "id": 2000,
+    "priority": 1,
+    "action": { "type": "block" },
+    "condition": {
+      "initiatorDomains": ["pobreflixtvhub.com"],
+      "requestDomains": ["acscdn.com", "llvpn.com"],
+      "resourceTypes": ["script"]
+    }
+  }
+]

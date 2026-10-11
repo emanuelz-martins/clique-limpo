@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Clique Limpo</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <header>
+    <img id="brand-face" class="mark" src="icons/face-inactive.svg" alt="" aria-hidden="true">
+    <div>
+      <h1>Clique Limpo</h1>
+      <p>Seu clique, sua escolha.</p>
+    </div>
+    <span class="version-badge">v1.0.0</span>
+  </header>
+  <main>
+    <aside id="welcome" class="welcome card" hidden aria-labelledby="welcome-title">
+      <h2 id="welcome-title">Seu primeiro clique limpo</h2>
+      <p>Toque na carinha para proteger o site nesta aba. Ela fica feliz quando a proteção está ativa.</p>
+      <p class="welcome-detail">Ao trocar de aba, pausa. Ao voltar, reativa. Links internos do site mantêm a proteção.</p>
+      <button id="welcome-dismiss" type="button">Entendi, vamos lá</button>
+    </aside>
+    <section class="site" aria-label="Proteção nesta página">
+      <div class="site-header">
+        <div><span class="eyebrow">PÁGINA ATUAL</span><div id="hostname">Carregando…</div></div>
+        <span id="status-pill" class="status-pill">Verificando</span>
+      </div>
+      <div class="activation">
+        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="state-label toggle-hint" disabled>
+          <img id="activation-face" src="icons/face-inactive.svg" alt="" aria-hidden="true">
+        </button>
+        <span id="state-label">Verificando proteção</span>
+        <p id="toggle-hint">Um toque para ativar ou pausar</p>
+        <p id="description">A proteção procura camadas invisíveis acima do conteúdo.</p>
+      </div>
+    </section>
+
+    <section class="tracking card">
+      <div class="protection">
+        <div>
+          <span class="option-label">Destravar player de vídeo</span>
+          <small>Ative se o vídeo não começar</small>
+        </div>
+        <label class="switch">
+          <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo caso não reproduza" disabled>
+          <span></span>
+        </label>
+      </div>
+      <p>Ajuda o player a iniciar sem liberar pop-ups.</p>
+    </section>
+
+    <div class="stats-container">
+      <div class="stat-card">
+        <strong id="hidden">0</strong>
+        <span>elementos ocultos</span>
+      </div>
+      <div class="stat-card">
+        <strong id="blocked">0</strong>
+        <span>eventos interceptados</span>
+      </div>
+    </div>
+    <p class="scope">Contadores da página principal, nesta visita.</p>
+
+    <div class="actions">
+      <button id="scan" class="primary" disabled>
+        <span>Verificar página agora</span>
+        <span aria-hidden="true">↗</span>
+      </button>
+      <button id="pick" class="secondary" disabled>Escolher elemento para ocultar</button>
+      <button id="restore" class="quiet" disabled>Restaurar elementos e desativar nesta página</button>
+    </div>
+
+    <p id="feedback" role="status" aria-live="polite"></p>
+
+    <footer>
+      <span>Sem conta ou assinatura.</span>
+      <button id="tips-toggle" type="button" aria-pressed="true" title="Mostrar dicas para ativar a proteção em páginas suspeitas">Dicas ativadas</button>
+    </footer>
+  </main>
+  <script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+name: Validar e distribuir
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Verificar, testar e empacotar
+    runs-on: windows-latest
+    timeout-minutes: 15
+    env:
+      CLIQUE_LIMPO_BROWSER: 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+      - run: npm ci
+      - run: npm run check
+      - run: npm test
+      - run: python scripts/package.py
+      - name: Guardar pacotes
+        uses: actions/upload-artifact@v7
+        with:
+          name: clique-limpo-pacotes
+          path: dist/*
+          if-no-files-found: error
+      - name: Guardar capturas e diagnosticos
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: clique-limpo-testes
+          path: test-results/
+          if-no-files-found: ignore
+
+  publish:
+    name: Publicar release no GitHub
+    needs: verify
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - run: python3 scripts/package.py
+      - name: Publicar pacotes verificados
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        shell: bash
+        run: |
+          if gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            echo "A release desta tag ja existe."
+            exit 0
+          fi
+          gh release create "$RELEASE_TAG" \
+            dist/Clique-Limpo.zip dist/Clique-Limpo-loja.zip dist/SHA256SUMS.txt \
+            --verify-tag --title "Clique Limpo ${RELEASE_TAG#v}" \
+            --notes "Pacotes do Clique Limpo. Clique-Limpo.zip inclui a pasta para instalacao manual. Clique-Limpo-loja.zip destina-se ao envio as lojas. Consulte o README para instalar e conhecer as permissoes e limitacoes."
