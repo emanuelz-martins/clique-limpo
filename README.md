@@ -1,10 +1,15 @@
-![Painel do Clique Limpo com a proteção ativada](docs/images/painel.png)
+<div align="center">
+  <img src="docs/images/logo.png" alt="Clique Limpo" width="64" height="64" />
+  <h1>Clique Limpo</h1>
+</div>
 
-# Clique Limpo
-
-Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente por aba e acompanha a navegação dentro do site escolhido.
+Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente, apenas na aba escolhida.
 
 **Versão atual: 1.0.3.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
+
+<div align="center">
+  <img src="docs/images/painel.png" alt="Painel do Clique Limpo com a proteção ativada" width="100%" />
+</div>
 
 ## Instalação
 
@@ -23,13 +28,13 @@ Não é necessário instalar Node.js ou executar comandos para usar a extensão.
 
 ### Instalação pelas lojas
 
-O Clique Limpo ainda não está publicado na Chrome Web Store ou no Microsoft Edge Add-ons. O botão de download do GitHub fornece o pacote para instalação manual; ele não instala a extensão automaticamente.
+O Clique Limpo ainda não está publicado na Chrome Web Store ou no Microsoft Edge Add-ons. O botão de download do GitHub fornece o pacote para instalação manual; ele não instala a extensão através da loja.
 
-A instalação pelo botão da loja, com confirmação do navegador e atualizações automáticas, fica disponível após a publicação e aprovação em cada loja. As condições de distribuição estão nas documentações do [Chrome](https://developer.chrome.com/docs/extensions/how-to/distribute) e do [Edge](https://learn.microsoft.com/en-us/microsoft-edge/extensions/publish/hosting-and-updating). O repositório inclui um [guia de publicação](docs/PUBLICACAO.md) e um pacote próprio para envio às lojas.
+A instalação pelo botão da loja, com confirmação do navegador e atualizações automáticas, fica disponível após a publicação e aprovação em cada loja. As condições de distribuição podem variar.
 
 ## Como usar
 
-Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. A extensão ativa as regras de proteção e recarrega a página automaticamente para que o novo carregamento já aconteça protegido. Ela fica feliz quando a proteção está ativa e triste quando está desativada.
+Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. A extensão ativa as regras de proteção e recarrega a página automaticamente para aplicar a proteção em seguida.
 
 | Ação | Comportamento |
 | --- | --- |
@@ -65,13 +70,13 @@ Para sair de **Escolher elemento para ocultar**, pressione **Esc** ou use **Canc
 
 ![Aviso de orientação do Clique Limpo](docs/images/dica.png)
 
-As dicas usam uma inspeção local e limitada, sem ativar o bloqueio sozinhas. O usuário pode selecionar **Ativar proteção**, **Agora não** ou **Não mostrar mais dicas**. A preferência pode ser alterada no rodapé do painel.
+As dicas usam uma inspeção local e limitada, sem ativar o bloqueio sozinhas. O usuário pode selecionar **Ativar proteção**, **Agora não** ou **Não mostrar mais dicas**. A preferência pode ser alterada depois no painel.
 
-Para evitar interrupções, os avisos respeitam um intervalo global de dez minutos na sessão e aparecem no máximo uma vez por origem a cada sete dias. Desaparecem após 25 segundos, ao trocar de aba ou ao ativar a proteção. A inspeção de dicas examina no máximo 1.800 elementos por varredura e evita avisos durante reprodução de mídia detectável naquele documento.
+Para evitar interrupções, os avisos respeitam um intervalo global de dez minutos na sessão e aparecem no máximo uma vez por origem a cada sete dias. Desaparecem após 25 segundos, ao trocar de aba ou ao ativar a proteção.
 
 ## Privacidade e permissões
 
-Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das dicas, além de até 64 origens e datas de avisos para controlar sua frequência. A ativação por aba fica na memória da sessão.
+Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das dicas e até 64 origens de sites com datas dos avisos para controlar sua frequência.
 
 | Permissão | Finalidade |
 | --- | --- |
@@ -84,11 +89,11 @@ Consulte a [política de privacidade](docs/PRIVACIDADE.md) para conhecer os dado
 
 ## Limitações
 
-A detecção é heurística: pode deixar passar anúncios ou classificar um elemento legítimo incorretamente. A extensão não garante anonimato, bloqueio de todos os anúncios ou invisibilidade aos mecanismos que detectam bloqueadores.
+A detecção é heurística: pode deixar passar anúncios ou classificar um elemento legítimo incorretamente. A extensão não garante anonimato, bloqueio de todos os anúncios ou invisibilidade online.
 
-Ativar depois do carregamento não desfaz cliques ou scripts já executados. A proteção não corrige indisponibilidade de servidores, arquivos de vídeo ausentes ou restrições de incorporação. Também não elimina registros do próprio servidor do site, identificação por login ou fingerprinting.
+Ativar depois do carregamento não desfaz cliques ou scripts já executados. A proteção não corrige indisponibilidade de servidores, arquivos de vídeo ausentes ou restrições de incorporação.
 
-Regras de rede podem afetar funções legítimas. Se algo deixar de funcionar, desative a proteção, restaure os elementos ou use a opção do player. Páginas internas do navegador e lojas de extensões não recebem a proteção.
+Regras de rede podem afetar funções legítimas. Se algo deixar de funcionar, desative a proteção, restaure os elementos ou use a opção do player. Páginas internas do navegador e lojas de extensões têm restrições especiais.
 
 ## Desenvolvimento e distribuição
 
@@ -105,6 +110,6 @@ O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.3
 
 As releases do GitHub não atualizam instalações manuais automaticamente. Veja os guias de [desenvolvimento](docs/DESENVOLVIMENTO.md) e [publicação](docs/PUBLICACAO.md).
 
-Para informar um problema, abra uma [issue](https://github.com/emanuelz-martins/clique-limpo/issues) com navegador, versão da extensão e passos para reproduzir. Remova informações pessoais antes de anexar imagens ou registros.
+Para informar um problema, abra uma [issue](https://github.com/emanuelz-martins/clique-limpo/issues) com navegador, versão da extensão e passos para reproduzir. Remova informações pessoais antes de compartilhar.
 
 O ícone do GitHub é do projeto [Octicons](https://github.com/primer/octicons), sob [licença MIT](clique-limpo/icons/GITHUB-LICENSE.txt).
