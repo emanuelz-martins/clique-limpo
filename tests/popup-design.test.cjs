@@ -70,7 +70,9 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     assert.equal(pageRequests, 1);
     assert.equal(adRequests, 1, 'A página inicial desativada não bloqueia o script simulado');
     assert.equal(await popup.locator('#reload-notice').textContent(), 'Ao ativar, a página será recarregada.');
-    assert.equal(await popup.locator('#toggle-hint, #description, .scope').count(), 0);
+    assert.equal(await popup.locator('#toggle-hint, #description, .scope, #state-label').count(), 0);
+    assert.equal((await popup.locator('#enabled').boundingBox()).width, 128);
+    assert.equal(await popup.locator('#player-hint').textContent(), 'Ative se o vídeo não começar ou estiver em outra língua.');
     await popup.locator('#enabled').click();
     await waitForState(true);
     await page.waitForLoadState('load');
@@ -95,12 +97,24 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     await waitForState(true);
     assert.equal((await status()).documentId, afterActivation.documentId, 'Voltar à aba protegida não recarrega');
     assert.equal(pageRequests, 2);
-    await popup.locator('#compatibility').check();
+    await popup.locator('.tracking .option-label').click();
     await popup.waitForFunction(() => !document.getElementById('compatibility').disabled);
+    await page.waitForLoadState('load');
+    const afterPlayerOption = await status();
+    assert.notEqual(afterPlayerOption.documentId, afterActivation.documentId);
+    assert.equal(afterPlayerOption.compatibility, true);
+    assert.equal(pageRequests, 3, 'Ativar a opção do player recarrega uma única vez');
+    assert.equal(adRequests, 1, 'Proteção permanece ativa durante o recarregamento do player');
+    const staleResult = await worker.evaluate(async message => {
+      try { return await enqueue(() => setPlayerCompatibility(message)); }
+      catch (error) { return { ok: false, error: error.message }; }
+    }, { tabId, documentId: afterActivation.documentId, pageUrl: afterActivation.pageUrl, compatibility: false });
+    assert.equal(staleResult.ok, false, 'Um painel antigo não pode alterar a preferência da página nova');
+    assert.equal((await status()).compatibility, true);
     await popup.locator('#enabled img').click();
     await waitForState(false);
-    assert.equal((await status()).documentId, afterActivation.documentId, 'Desativar não recarrega');
-    assert.equal(pageRequests, 2);
+    assert.equal((await status()).documentId, afterPlayerOption.documentId, 'Desativar não recarrega');
+    assert.equal(pageRequests, 3);
     assert.match(await popup.locator('#activation-face').getAttribute('src'), /face-inactive\.svg$/);
     assert.equal(await popup.locator('#scan').isDisabled(), true);
     assert.equal(await popup.locator('#compatibility').isChecked(), true);
@@ -117,7 +131,7 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     await waitForState(true);
     assert.equal(await popup.locator('#compatibility').isChecked(), true);
     await page.waitForLoadState('load');
-    assert.equal(pageRequests, 3, 'Ativar pelo teclado também recarrega uma única vez');
+    assert.equal(pageRequests, 4, 'Ativar pelo teclado também recarrega uma única vez');
     assert.match(await iconTitle(), /ativo nesta página/);
     assert.deepEqual(errors, []);
 

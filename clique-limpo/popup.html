@@ -13,7 +13,7 @@
       <h1>Clique Limpo</h1>
       <p id="reload-notice">Ao ativar, a página será recarregada.</p>
     </div>
-    <span class="version-badge">v1.0.2</span>
+    <span class="version-badge">v1.0.3</span>
   </header>
   <main>
     <aside id="welcome" class="welcome card" hidden aria-labelledby="welcome-title">
@@ -28,25 +28,24 @@
         <span id="status-pill" class="status-pill">Verificando</span>
       </div>
       <div class="activation">
-        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="state-label reload-notice" disabled>
+        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="reload-notice" disabled>
           <img id="activation-face" src="icons/face-inactive.svg" alt="" aria-hidden="true">
         </button>
-        <span id="state-label">Verificando proteção</span>
       </div>
     </section>
 
-    <section class="tracking card">
-      <div class="protection">
-        <div>
+    <label class="tracking card" for="compatibility">
+      <span class="protection">
+        <span>
           <span class="option-label">Destravar player de vídeo</span>
-          <small>Ative se o vídeo não começar</small>
-        </div>
-        <label class="switch">
-          <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo caso não reproduza" disabled>
+          <small id="player-hint">Ative se o vídeo não começar ou estiver em outra língua.</small>
+        </span>
+        <span class="switch">
+          <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo" aria-describedby="player-hint reload-notice" disabled>
           <span></span>
-        </label>
-      </div>
-    </section>
+        </span>
+      </span>
+    </label>
 
     <div class="stats-container">
       <div class="stat-card">

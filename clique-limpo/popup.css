@@ -29,8 +29,8 @@ button:focus-visible, .switch input:focus-visible + span { outline: 2px solid #f
 .activation-button {
   display: grid;
   place-items: center;
-  width: 96px;
-  height: 96px;
+  width: 128px;
+  height: 128px;
   padding: 0;
   border: 7px solid #383434;
   border-radius: 50%;
@@ -42,8 +42,8 @@ button:focus-visible, .switch input:focus-visible + span { outline: 2px solid #f
 .activation-button[aria-pressed="true"]:hover:enabled { background: #ee5c5c; }
 .activation-button:active:enabled { transform: translateY(4px); box-shadow: 0 1px 0 #0c0c0c, inset 0 -2px 0 #5b5553; }
 .activation-button[aria-pressed="true"]:active:enabled { box-shadow: 0 1px 0 #0c0c0c, inset 0 -2px 0 #b63838; }
-.activation-button img { width: 64px; height: 56px; pointer-events: none; }
-#state-label { font-size: 15px; font-weight: 600; margin-top: 10px; }
+.activation-button img { width: 86px; height: 76px; pointer-events: none; }
+.tracking { display: block; cursor: pointer; }
 .card { background: #242222; border: 1px solid #383333; border-radius: 16px; padding: 10px 14px; }
 .protection { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .tracking .option-label { font-size: 12px; font-weight: 600; }

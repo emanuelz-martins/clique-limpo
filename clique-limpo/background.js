@@ -194,6 +194,25 @@ async function setPageEnabled(message, { reloadOnActivation = false } = {}) {
   }
   return { ok: true, reloaded: false };
 }
+async function setPlayerCompatibility(message) {
+  const page = await currentPage(message.tabId);
+  if (!supported(page?.url) || !message.documentId || page.documentId !== message.documentId || page.url !== message.pageUrl || typeof message.compatibility !== "boolean") {
+    throw new Error("A página mudou. Reabra o painel para ajustar o player.");
+  }
+  const key = `site:${hostname(page.url)}`;
+  const stored = await chrome.storage.local.get(key);
+  const shouldReload = message.compatibility && stored[key]?.compatibility !== true;
+  await chrome.storage.local.set({ [key]: { ...stored[key], compatibility: message.compatibility } });
+  await notifyPage(message.tabId);
+  if (shouldReload) {
+    const current = await currentPage(message.tabId);
+    if (current?.documentId === page.documentId && current.url === page.url) {
+      await chrome.tabs.reload(message.tabId);
+      return { ok: true, reloaded: true };
+    }
+  }
+  return { ok: true, reloaded: false };
+}
 async function claimHint(message, sender) {
   if (sender.frameId !== 0) return { show: false };
   const config = await configForTab(sender.tab.id);
@@ -212,6 +231,10 @@ async function claimHint(message, sender) {
   return { show: true };
 }
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.type === "SET_PLAYER_COMPATIBILITY") {
+    void enqueue(() => setPlayerCompatibility(message)).then(respond, error => respond({ ok: false, error: error.message }));
+    return true;
+  }
   if (message?.type === "CANCEL_PICK" && Number.isInteger(sender.tab?.id) && sender.frameId !== 0) {
     void enqueue(async () => {
       const page = await currentPage(sender.tab.id);

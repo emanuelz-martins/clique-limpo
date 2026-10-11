@@ -49,7 +49,6 @@ function render(next) {
     pill.textContent = next.enabled ? "Ativo" : "Desativado";
     pill.className = `status-pill ${next.enabled ? "active" : "paused"}`;
   }
-  $("state-label").textContent = next.enabled ? "Proteção ativa" : "Proteção desativada";
   $("hidden").textContent = next.hidden;
   $("blocked").textContent = next.blocked + (next.blockedPopups || 0);
   $("scan").disabled = busy || !next.enabled;
@@ -93,15 +92,19 @@ $("compatibility").addEventListener("change", event => {
   const compatibility = event.target.checked;
   state = { ...state, compatibility };
   void act(async () => {
-    const key = `site:${host}`;
-    const stored = await chrome.storage.local.get(key);
-    await chrome.storage.local.set({ [key]: { ...stored[key], compatibility } });
-    for (let attempt = 0; attempt < 15; attempt++) {
-      await new Promise(resolve => setTimeout(resolve, 60));
-      const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
-      if (next?.ready && next.compatibility === compatibility) { render(next); break; }
+    const previousDocumentId = state.documentId;
+    const result = await chrome.runtime.sendMessage({ type: "SET_PLAYER_COMPATIBILITY", tabId, compatibility, documentId: state.documentId, pageUrl: state.pageUrl });
+    if (!result?.ok) throw new Error(result?.error || "Não foi possível alterar a opção do player.");
+    let confirmed = false;
+    for (let attempt = 0; attempt < (result.reloaded ? 60 : 15); attempt++) {
+      await new Promise(resolve => setTimeout(resolve, result.reloaded ? 100 : 60));
+      try {
+        const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
+        if (next?.ready && next.compatibility === compatibility && (!result.reloaded || next.documentId !== previousDocumentId)) { render(next); confirmed = true; break; }
+      } catch (error) { if (!result.reloaded) throw error; }
     }
-    $("feedback").textContent = compatibility ? "Destravamento ativado. Recarregue a página se o vídeo não iniciar." : "Destravamento desativado.";
+    if (!confirmed) throw new Error("Reabra o painel para conferir a opção do player.");
+    $("feedback").textContent = compatibility ? "Opção do player ativada. Página recarregada." : "Opção do player desativada.";
   });
 });
 $("scan").addEventListener("click", () => void act(async () => {
@@ -134,7 +137,6 @@ $("restore").addEventListener("click", () => void act(async () => {
     }
   } catch (error) {
     $("hostname").textContent = "Página indisponível";
-    $("state-label").textContent = "Proteção indisponível";
     $("status-pill").textContent = "Indisponível";
     $("status-pill").className = "status-pill";
     $("feedback").textContent = error.message;

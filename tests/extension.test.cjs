@@ -503,6 +503,8 @@ test('Extensão real no Chromium', { timeout: 120000 }, async t => {
       assert.equal(await popup.locator('#anti-traps').count(), 0, 'Popup deve exibir estritamente as 2 opções');
       assert.equal(await popup.locator('#compatibility').isChecked(),false);
       await popup.locator('#compatibility').check();
+      await popup.waitForFunction(() => !document.getElementById('compatibility').disabled);
+      await page.waitForLoadState('load');
       await wait(async()=>(await status()).compatibility===true);
       assert.equal((await status()).enabled,true);
       await wait(async () => (await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).some(rule => rule.id === 1000));
@@ -522,6 +524,13 @@ test('Extensão real no Chromium', { timeout: 120000 }, async t => {
       assert.equal((await status()).enabled,false,'Modo compatível não deve reativar proteção pausada');
       await wait(()=>popup.locator('#compatibility').isEnabled());
       assert.equal(await popup.locator('#compatibility').isChecked(),false,'Painel deve refletir a preferência confirmada');
+      const pausedDocument = (await status()).documentId;
+      await popup.locator('#compatibility').check();
+      await popup.waitForFunction(() => !document.getElementById('compatibility').disabled);
+      await page.waitForLoadState('load');
+      assert.notEqual((await status()).documentId, pausedDocument);
+      assert.equal((await status()).compatibility, true);
+      assert.equal((await status()).enabled, false, 'Ativar a opção do player não ativa a proteção por conta própria');
       await popup.locator('main').evaluate(el=>{el.scrollTop=0;});
       await popup.locator('body').screenshot({ path: path.resolve(__dirname, '../test-results/popup.png') });
       await popup.close();
