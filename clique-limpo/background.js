@@ -169,11 +169,14 @@ chrome.storage.onChanged.addListener((changes, area) => {
     await Promise.all(tabs.filter(tab => changes[`site:${hostname(tab.url)}`]).map(tab => notifyPage(tab.id)));
   });
 });
-async function setPageEnabled(message) {
+async function setPageEnabled(message, { reloadOnActivation = false } = {}) {
   const page = await currentPage(message.tabId);
   if (!supported(page?.url) || !message.documentId || page.documentId !== message.documentId || page.url !== message.pageUrl) {
     throw new Error("A página mudou. Reabra o painel para ativar a página atual.");
   }
+  const key = pageKey(message.tabId);
+  const previous = await chrome.storage.session.get(key);
+  const shouldReload = reloadOnActivation && message.enabled === true && !sameSite(previous[key], page.url);
   if (message.enabled === true) {
     await chrome.storage.session.set({ [pageKey(message.tabId)]: { enabled: true, origin: siteOrigin(page.url) } });
   } else {
@@ -181,7 +184,15 @@ async function setPageEnabled(message) {
   }
   await syncNetworkRules();
   await Promise.all([notifyPage(message.tabId), updateIcon(message.tabId)]);
-  return { ok: true };
+  if (shouldReload) {
+    const current = await currentPage(message.tabId);
+    // A fresh internal navigation already loads with protection; do not reload it again.
+    if (current?.documentId === page.documentId && current.url === page.url) {
+      await chrome.tabs.reload(message.tabId);
+      return { ok: true, reloaded: true };
+    }
+  }
+  return { ok: true, reloaded: false };
 }
 async function claimHint(message, sender) {
   if (sender.frameId !== 0) return { show: false };
@@ -215,7 +226,7 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
   }
   if (Number.isInteger(sender.tab?.id) && sender.frameId === 0 && message?.type === 'ACTIVATE_FROM_HINT') {
     void enqueue(async () => {
-      const result = await setPageEnabled({ ...message, tabId: sender.tab.id, enabled: true });
+      const result = await setPageEnabled({ ...message, tabId: sender.tab.id, enabled: true }, { reloadOnActivation: true });
       await chrome.storage.local.set({ 'help:welcomeSeen': true });
       return result;
     }).then(respond, error => respond({ ok: false, error: error.message }));
@@ -230,6 +241,6 @@ chrome.runtime.onMessage.addListener((message, sender, respond) => {
     return true;
   }
   if (message?.type !== "SET_PAGE_ENABLED") return;
-  void enqueue(() => setPageEnabled(message)).then(respond, error => respond({ ok: false, error: error.message }));
+  void enqueue(() => setPageEnabled(message, { reloadOnActivation: true })).then(respond, error => respond({ ok: false, error: error.message }));
   return true;
 });

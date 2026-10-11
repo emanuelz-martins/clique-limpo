@@ -7,13 +7,15 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 
 test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repetição', { timeout: 120000 }, async t => {
+  let receivedSiteClicks = 0;
   const trap = '<a id="trap" href="#ad" style="position:fixed;inset:0;z-index:1000"></a>';
   const server = http.createServer((request, response) => {
+    if (request.url === '/site-click') { receivedSiteClicks++; response.end('ok'); return; }
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
     response.setHeader('Cache-Control', 'no-store');
     response.end(`<!doctype html><meta charset="utf-8"><title>Teste das dicas</title>
       <style>body{font:16px Arial;background:#f4f3ef;color:#292929;margin:50px}h1{font-size:26px}button{padding:12px}iframe{width:700px;height:400px}</style>
-      <script>window.siteClicks=0;document.addEventListener('click',()=>window.siteClicks++,true);</script>
+      <script>window.siteClicks=0;document.addEventListener('click',()=>{window.siteClicks++;navigator.sendBeacon('/site-click');},true);</script>
       <h1>Uma página com conteúdo</h1><p>Uma dica discreta para entender a proteção.</p><button id="normal">Conteúdo normal</button>
       ${request.url.startsWith('/trap') || request.url === '/frame' ? trap : ''}
       ${request.url === '/embedded' ? '<iframe src="/frame"></iframe>' : ''}`);
@@ -38,10 +40,14 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
     await page.goto(`${address}/normal`);
     const id = await worker.evaluate(async address => (await chrome.tabs.query({})).find(tab => tab.url?.startsWith(address)).id, address);
     const status = () => worker.evaluate(id => chrome.tabs.sendMessage(id, { type: 'STATUS' }, { frameId: 0 }), id);
-    const waitForState = async enabled => {
+    const waitForState = async (enabled, previousDocumentId) => {
       for (let attempt = 0; attempt < 150; attempt++) {
-        const state = await status();
-        if (state.ready && state.enabled === enabled) return state;
+        try {
+          const state = await status();
+          if (state.ready && state.enabled === enabled && (!previousDocumentId || state.documentId !== previousDocumentId)) return state;
+        } catch (error) {
+          if (!previousDocumentId || !error.message.includes('Receiving end does not exist')) throw error;
+        }
         await new Promise(resolve => setTimeout(resolve, 30));
       }
       throw new Error('Estado de proteção não confirmado');
@@ -86,11 +92,14 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       assert.notEqual(await page.locator('#trap').evaluate(el => getComputedStyle(el).display), 'none');
       await page.screenshot({ path: path.join(screenshots, 'design-page-tip.png') });
       await hint().screenshot({ path: path.join(screenshots, 'design-tip-card.png') });
+      const beforeActivation = await status();
       await hint().locator('.activate').click();
-      await waitForState(true);
+      await waitForState(true, beforeActivation.documentId);
+      await page.waitForLoadState('load');
       await hint().waitFor({ state: 'detached' });
       await page.waitForFunction(() => getComputedStyle(document.getElementById('trap')).display === 'none');
       assert.equal(await page.evaluate(() => window.siteClicks), 0, 'O site não recebe o clique de ativação do aviso');
+      assert.equal(receivedSiteClicks, 0, 'Nenhum clique foi enviado pelo documento anterior ao recarregamento');
       assert.equal((await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).length, 3);
       const state = await status();
       await worker.evaluate(message => enqueue(() => setPageEnabled(message)), { tabId: id, documentId: state.documentId, pageUrl: state.pageUrl, enabled: false });
@@ -149,9 +158,12 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       await page.evaluate(html => document.body.insertAdjacentHTML('beforeend', html), trap);
       await hint().waitFor({ state: 'visible', timeout: 12000 });
       await hint().locator('.activate').focus();
+      const beforeActivation = await status();
       await page.keyboard.press('Space');
-      await waitForState(true);
+      await waitForState(true, beforeActivation.documentId);
+      await page.waitForLoadState('load');
       assert.equal(await page.evaluate(() => window.siteClicks), 0, 'Ativação pelo teclado também não vaza para o site');
+      assert.equal(receivedSiteClicks, 0);
     });
 
     await t.test('uma camada dentro de iframe produz somente um aviso na página principal', async () => {

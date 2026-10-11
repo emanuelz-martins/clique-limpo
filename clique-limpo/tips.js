@@ -94,7 +94,7 @@
       .actions{display:flex;gap:8px;margin-top:13px}button{font:600 12px "Segoe UI",Arial,sans-serif;cursor:pointer;border:0;border-radius:20px;min-height:34px;padding:8px 13px}.activate{background:#e24b4b;color:#fff}.later{background:#393232;color:#f4e9e5}button:focus-visible{outline:2px solid #ffb6b6;outline-offset:3px}button:disabled{opacity:.5;cursor:default}.mute{background:transparent;color:#b9adaa;font-size:10px;font-weight:400;padding:8px 0 0;min-height:26px}.error{color:#ffb6b6;margin:8px 0 0}[hidden]{display:none}
     </style><aside class="tip" role="status" aria-live="polite" aria-label="Dica do Clique Limpo">
       <div class="heading"><div class="face" aria-hidden="true">${face}</div><div><div class="brand">CLIQUE LIMPO · UMA DICA</div><h2>Proteja seus cliques aqui</h2></div></div>
-      <p>Esta página pode ter anúncios invisíveis. Ative a proteção para ajudar a bloquear cliques indesejados.</p>
+      <p>Esta página pode ter anúncios invisíveis. Ao ativar a proteção, ela será recarregada.</p>
       <div class="actions"><button class="activate" data-action="activate">Ativar proteção</button><button class="later" data-action="later">Agora não</button></div>
       <button class="mute" data-action="mute">Não mostrar mais dicas</button><p class="error" hidden></p>
     </aside>`;

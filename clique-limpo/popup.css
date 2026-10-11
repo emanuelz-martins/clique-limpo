@@ -44,13 +44,10 @@ button:focus-visible, .switch input:focus-visible + span { outline: 2px solid #f
 .activation-button[aria-pressed="true"]:active:enabled { box-shadow: 0 1px 0 #0c0c0c, inset 0 -2px 0 #b63838; }
 .activation-button img { width: 64px; height: 56px; pointer-events: none; }
 #state-label { font-size: 15px; font-weight: 600; margin-top: 10px; }
-#toggle-hint { color: var(--muted); font-size: 11px; margin: 3px 0 0; }
-#description { color: var(--muted); font-size: 11px; line-height: 1.5; margin: 6px 0 0; max-width: 330px; }
 .card { background: #242222; border: 1px solid #383333; border-radius: 16px; padding: 10px 14px; }
 .protection { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 .tracking .option-label { font-size: 12px; font-weight: 600; }
 .tracking small { display: block; color: var(--muted); font-size: 10px; margin-top: 2px; }
-.tracking p { font-size: 10.5px; color: var(--muted); line-height: 1.5; margin: 7px 0 0; }
 .switch { position: relative; display: inline-flex; flex-shrink: 0; cursor: pointer; }
 .switch input { position: absolute; opacity: 0; width: 42px; height: 24px; margin: 0; z-index: 1; cursor: pointer; }
 .switch span { display: block; width: 42px; height: 24px; border: 1px solid #79706c; background: #393434; border-radius: 99px; pointer-events: none; transition: background .15s; }
@@ -58,12 +55,11 @@ button:focus-visible, .switch input:focus-visible + span { outline: 2px solid #f
 .switch input:checked + span { background: var(--accent); border-color: var(--accent); }
 .switch input:checked + span::before { transform: translateX(18px); background: #fff4f2; }
 .switch input:disabled + span { opacity: .45; }
-.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
+.stats-container { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 14px 0; }
 .stat-card { display: flex; align-items: center; gap: 9px; }
 .stat-card + .stat-card { border-left: 1px solid #383333; padding-left: 13px; }
 .stat-card strong { font-size: 25px; font-weight: 600; font-variant-numeric: tabular-nums; }
 .stat-card span { color: var(--muted); font-size: 10px; line-height: 1.35; }
-.scope { font-size: 9px; color: #a69e9b; margin: 6px 0 12px; }
 .actions { display: flex; flex-direction: column; gap: 7px; }
 .actions button { width: 100%; font-size: 11px; font-weight: 600; border-radius: 20px; padding: 8px 12px; }
 .primary { background: #f2eeeb; color: #252121; display: flex; align-items: center; justify-content: space-between; }
@@ -75,6 +71,11 @@ button:focus-visible, .switch input:focus-visible + span { outline: 2px solid #f
 #feedback { padding: 9px 11px; background: #332b29; border-radius: 10px; color: #eed7cf; font-size: 11px; margin: 10px 0 0; }
 #feedback:empty { display: none; }
 footer { color: #a69e9b; font-size: 9px; margin-top: 7px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.github-link { display: grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; }
+.github-link img { width: 20px; height: 20px; opacity: .8; filter: brightness(0) invert(1); }
+.github-link:hover { background: #302b2a; }
+.github-link:hover img { opacity: 1; }
+.github-link:focus-visible { outline: 2px solid #ffaaaa; outline-offset: 2px; }
 #tips-toggle { font: inherit; color: #d3bdb8; background: transparent; padding: 4px 0; border-radius: 4px; text-decoration: underline; text-underline-offset: 3px; }
 .welcome { margin-bottom: 14px; border-color: #6c4343; }
 .welcome h2 { font-size: 13px; margin: 0 0 6px; }

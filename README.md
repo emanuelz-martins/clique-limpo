@@ -4,7 +4,7 @@
 
 Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente por aba e acompanha a navegação dentro do site escolhido.
 
-**Versão atual: 1.0.0.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
+**Versão atual: 1.0.1.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
 
 ## Instalação
 
@@ -29,20 +29,22 @@ A instalação pelo botão da loja, com confirmação do navegador e atualizaç�
 
 ## Como usar
 
-Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. Ela fica feliz quando a proteção está ativa e triste quando está desativada.
+Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. A extensão ativa as regras de proteção e recarrega a página automaticamente para que o novo carregamento já aconteça protegido. Ela fica feliz quando a proteção está ativa e triste quando está desativada.
 
 | Ação | Comportamento |
 | --- | --- |
-| Ativar pela carinha ou por uma dica | Protege o site naquela aba. |
+| Ativar pela carinha ou por uma dica | Protege o site naquela aba e recarrega a página uma vez. |
 | Navegar para outra página do mesmo site | Mantém a proteção, inclusive ao recarregar ou usar o histórico. |
 | Abrir um link interno em nova aba | A nova aba herda a ativação. |
 | Abrir uma aba separadamente | Começa desativada, mesmo que o endereço seja igual. |
-| Trocar de aba | Pausa a proteção da aba anterior; voltar a ela reativa a proteção. |
+| Trocar de aba | Pausa a proteção da aba anterior; voltar a ela reativa a proteção sem recarregar. |
 | Sair para outro site | Apaga a ativação naquela aba. |
-| Desativar manualmente | Mantém a proteção desligada até uma nova ativação. |
+| Desativar manualmente | Desliga sem recarregar; exige nova ativação. |
 | Reiniciar o navegador ou recarregar a extensão | Exige nova ativação. |
 
 O site é identificado por protocolo, domínio e porta. Preferências de compatibilidade do player são salvas localmente e não ativam a proteção por conta própria.
+
+O ícone do GitHub no rodapé abre este repositório em uma nova aba. O aviso de recarregamento aparece no cabeçalho do painel e nas dicas de ativação.
 
 ## Recursos
 
@@ -97,8 +99,10 @@ scripts/           Verificação, geração de ícones e empacotamento
 .github/workflows/ Validação e releases automáticas
 ```
 
-O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.0` geram uma release com `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256, depois que os testes passam. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas.
+O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.1` geram uma release com `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256, depois que os testes passam. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas.
 
 As releases do GitHub não atualizam instalações manuais automaticamente. Veja os guias de [desenvolvimento](docs/DESENVOLVIMENTO.md) e [publicação](docs/PUBLICACAO.md).
 
 Para informar um problema, abra uma [issue](https://github.com/emanuelz-martins/clique-limpo/issues) com navegador, versão da extensão e passos para reproduzir. Remova informações pessoais antes de anexar imagens ou registros.
+
+O ícone do GitHub é do projeto [Octicons](https://github.com/primer/octicons), sob [licença MIT](clique-limpo/icons/GITHUB-LICENSE.txt).

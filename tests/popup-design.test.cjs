@@ -7,9 +7,18 @@ const path = require('node:path');
 const { chromium } = require('playwright');
 
 test('Botão com carinha salva o estado e preserva a opção do player', { timeout: 60000 }, async () => {
+  let pageRequests = 0;
+  let adRequests = 0;
   const server = http.createServer((request, response) => {
+    if (request.url === '/early-ad.js') {
+      adRequests++;
+      response.setHeader('Content-Type', 'application/javascript');
+      response.end('window.earlyAdRan=true;');
+      return;
+    }
+    if (request.url === '/') pageRequests++;
     response.setHeader('Content-Type', 'text/html; charset=utf-8');
-    response.end('<!doctype html><title>Teste do painel</title><button>Conteúdo normal</button>');
+    response.end(`<!doctype html><title>Teste do painel</title><script src="http://mrktmtrcs.net:${server.address().port}/early-ad.js"></script><button>Conteúdo normal</button>`);
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const address = `http://exemplo.test:${server.address().port}`;
@@ -20,7 +29,7 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     context = await chromium.launchPersistentContext(profile, {
       ...(process.env.CLIQUE_LIMPO_BROWSER ? { executablePath: process.env.CLIQUE_LIMPO_BROWSER } : { channel: 'msedge' }),
       headless: true, ignoreDefaultArgs: ['--disable-extensions'],
-      args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--host-resolver-rules=MAP exemplo.test 127.0.0.1']
+      args: [`--disable-extensions-except=${extension}`, `--load-extension=${extension}`, '--host-resolver-rules=MAP exemplo.test 127.0.0.1, MAP mrktmtrcs.net 127.0.0.1']
     });
     context.setDefaultTimeout(10000);
     const worker = context.serviceWorkers()[0] || await context.waitForEvent('serviceworker');
@@ -56,17 +65,42 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     const layout = await popup.locator('main').evaluate(element => ({ height: element.clientHeight, content: element.scrollHeight }));
     assert.ok(layout.content <= layout.height, `As ações devem estar visíveis sem rolagem no estado inicial (${layout.content}/${layout.height}); ${await popup.locator('#feedback').textContent()}`);
     const iconTitle = () => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId);
+    const status = () => worker.evaluate(id => chrome.tabs.sendMessage(id, { type: 'STATUS' }, { frameId: 0 }), tabId);
+    const beforeActivation = await status();
+    assert.equal(pageRequests, 1);
+    assert.equal(adRequests, 1, 'A página inicial desativada não bloqueia o script simulado');
+    assert.equal(await popup.locator('#reload-notice').textContent(), 'Ao ativar, a página será recarregada.');
+    assert.equal(await popup.locator('#toggle-hint, #description, .scope').count(), 0);
     await popup.locator('#enabled').click();
     await waitForState(true);
+    await page.waitForLoadState('load');
+    const afterActivation = await status();
+    assert.notEqual(afterActivation.documentId, beforeActivation.documentId);
+    assert.equal(pageRequests, 2, 'Ativação manual recarrega exatamente uma vez');
+    assert.equal(adRequests, 1, 'As regras estão instaladas antes do recarregamento');
+    assert.equal(await page.evaluate(() => window.earlyAdRan), undefined);
     assert.match(await iconTitle(), /ativo nesta página/);
     await openPopup();
     const screenshots = path.resolve(__dirname, '../test-results');
     fs.mkdirSync(screenshots, { recursive: true });
     await popup.locator('body').screenshot({ path: path.join(screenshots, 'design-active.png') });
+    await context.route('https://github.com/emanuelz-martins/clique-limpo', route => route.fulfill({ contentType: 'text/html', body: '<title>Repositório simulado</title>' }));
+    const openedRepository = context.waitForEvent('page');
+    await popup.locator('.github-link').click();
+    const repository = await openedRepository;
+    await repository.waitForURL('https://github.com/emanuelz-martins/clique-limpo');
+    await repository.close();
+    await page.bringToFront();
+    await openPopup();
+    await waitForState(true);
+    assert.equal((await status()).documentId, afterActivation.documentId, 'Voltar à aba protegida não recarrega');
+    assert.equal(pageRequests, 2);
     await popup.locator('#compatibility').check();
     await popup.waitForFunction(() => !document.getElementById('compatibility').disabled);
     await popup.locator('#enabled img').click();
     await waitForState(false);
+    assert.equal((await status()).documentId, afterActivation.documentId, 'Desativar não recarrega');
+    assert.equal(pageRequests, 2);
     assert.match(await popup.locator('#activation-face').getAttribute('src'), /face-inactive\.svg$/);
     assert.equal(await popup.locator('#scan').isDisabled(), true);
     assert.equal(await popup.locator('#compatibility').isChecked(), true);
@@ -82,6 +116,8 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     await popup.keyboard.press('Space');
     await waitForState(true);
     assert.equal(await popup.locator('#compatibility').isChecked(), true);
+    await page.waitForLoadState('load');
+    assert.equal(pageRequests, 3, 'Ativar pelo teclado também recarrega uma única vez');
     assert.match(await iconTitle(), /ativo nesta página/);
     assert.deepEqual(errors, []);
 

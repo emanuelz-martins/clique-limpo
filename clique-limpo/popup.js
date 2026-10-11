@@ -41,7 +41,6 @@ function render(next) {
   const face = `icons/face-${next.enabled ? "active" : "inactive"}.svg`;
   $("activation-face").src = face;
   $("brand-face").src = face;
-  $("toggle-hint").textContent = next.enabled ? "Toque na carinha para desativar" : "Toque na carinha para ativar";
   $("enabled").disabled = busy;
   $("compatibility").checked = next.compatibility === true;
   $("compatibility").disabled = busy;
@@ -56,7 +55,6 @@ function render(next) {
   $("scan").disabled = busy || !next.enabled;
   $("pick").disabled = busy || !next.enabled;
   $("restore").disabled = busy || !next.enabled && !next.hidden;
-  $("description").textContent = next.enabled ? "Segue neste site. Pausa ao trocar de aba." : "Ative manualmente para proteger este site nesta aba.";
 }
 
 async function readStatus() {
@@ -66,12 +64,15 @@ async function readStatus() {
 }
 
 async function toggle(enabled) {
+  const previousDocumentId = state.documentId;
   const result = await chrome.runtime.sendMessage({ type: "SET_PAGE_ENABLED", tabId, enabled, documentId: state.documentId, pageUrl: state.pageUrl });
   if (!result?.ok) throw new Error(result?.error || "Não foi possível alterar a proteção desta página.");
-  for (let attempt = 0; attempt < 15; attempt++) {
-    await new Promise(resolve => setTimeout(resolve, 60));
-    const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
-    if (next?.ready && next.enabled === enabled) { render(next); return; }
+  for (let attempt = 0; attempt < (result.reloaded ? 60 : 15); attempt++) {
+    await new Promise(resolve => setTimeout(resolve, result.reloaded ? 100 : 60));
+    try {
+      const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
+      if (next?.ready && next.enabled === enabled && (!result.reloaded || next.documentId !== previousDocumentId)) { render(next); return; }
+    } catch (error) { if (!result.reloaded) throw error; }
   }
   throw new Error("Reabra o painel para conferir a proteção desta página.");
 }
@@ -136,8 +137,6 @@ $("restore").addEventListener("click", () => void act(async () => {
     $("state-label").textContent = "Proteção indisponível";
     $("status-pill").textContent = "Indisponível";
     $("status-pill").className = "status-pill";
-    $("toggle-hint").textContent = "Abra uma página para usar a proteção";
-    $("description").textContent = "Após instalar a extensão, recarregue as abas que já estavam abertas.";
     $("feedback").textContent = error.message;
   }
 })();

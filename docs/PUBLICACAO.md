@@ -11,8 +11,8 @@ Para oferecer um botão de instalação com confirmação do navegador, é neces
 Atualize versão e documentação, execute as verificações e envie o commit para `main`. Depois crie a tag correspondente:
 
 ```powershell
-git tag v1.0.0
-git push origin v1.0.0
+git tag v1.0.1
+git push origin v1.0.1
 ```
 
 O workflow **Validar e distribuir** testa em Edge com perfil isolado. Após os testes passarem, publica os pacotes:

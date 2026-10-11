@@ -11,9 +11,9 @@
     <img id="brand-face" class="mark" src="icons/face-inactive.svg" alt="" aria-hidden="true">
     <div>
       <h1>Clique Limpo</h1>
-      <p>Seu clique, sua escolha.</p>
+      <p id="reload-notice">Ao ativar, a página será recarregada.</p>
     </div>
-    <span class="version-badge">v1.0.0</span>
+    <span class="version-badge">v1.0.1</span>
   </header>
   <main>
     <aside id="welcome" class="welcome card" hidden aria-labelledby="welcome-title">
@@ -28,12 +28,10 @@
         <span id="status-pill" class="status-pill">Verificando</span>
       </div>
       <div class="activation">
-        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="state-label toggle-hint" disabled>
+        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="state-label reload-notice" disabled>
           <img id="activation-face" src="icons/face-inactive.svg" alt="" aria-hidden="true">
         </button>
         <span id="state-label">Verificando proteção</span>
-        <p id="toggle-hint">Um toque para ativar ou pausar</p>
-        <p id="description">A proteção procura camadas invisíveis acima do conteúdo.</p>
       </div>
     </section>
 
@@ -48,7 +46,6 @@
           <span></span>
         </label>
       </div>
-      <p>Ajuda o player a iniciar sem liberar pop-ups.</p>
     </section>
 
     <div class="stats-container">
@@ -61,7 +58,6 @@
         <span>eventos interceptados</span>
       </div>
     </div>
-    <p class="scope">Contadores da página principal, nesta visita.</p>
 
     <div class="actions">
       <button id="scan" class="primary" disabled>
@@ -75,7 +71,9 @@
     <p id="feedback" role="status" aria-live="polite"></p>
 
     <footer>
-      <span>Sem conta ou assinatura.</span>
+      <a class="github-link" href="https://github.com/emanuelz-martins/clique-limpo" target="_blank" rel="noopener noreferrer" aria-label="Abrir o repositório do Clique Limpo no GitHub" title="Repositório no GitHub">
+        <img src="icons/github.svg" alt="" aria-hidden="true">
+      </a>
       <button id="tips-toggle" type="button" aria-pressed="true" title="Mostrar dicas para ativar a proteção em páginas suspeitas">Dicas ativadas</button>
     </footer>
   </main>
