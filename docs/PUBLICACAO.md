@@ -8,14 +8,14 @@ Para oferecer um botão de instalação com confirmação do navegador, é neces
 
 ## Release no GitHub
 
-Atualize versão e documentação, execute as verificações e envie o commit para `main`. Depois crie a tag correspondente:
+Atualize versão e documentação, execute as verificações e valide a extensão no navegador antes de enviar o commit para `main`. Depois crie a tag correspondente:
 
 ```powershell
-git tag v1.0.3
-git push origin v1.0.3
+git tag v1.0.0
+git push origin v1.0.0
 ```
 
-O workflow **Validar e distribuir** testa em Edge com perfil isolado. Após os testes passarem, publica os pacotes:
+O workflow **Validar e distribuir** testa em Edge com perfil isolado. Após os testes passarem, gera artefatos com os pacotes:
 
 | Arquivo | Destino |
 | --- | --- |
@@ -23,7 +23,9 @@ O workflow **Validar e distribuir** testa em Edge com perfil isolado. Após os t
 | `Clique-Limpo-loja.zip` | Envio às lojas; contém `manifest.json` na raiz. |
 | `SHA256SUMS.txt` | Integridade dos dois pacotes. |
 
-Envios para `main`, pull requests e execuções manuais também geram artefatos, mas somente uma tag enviada publica uma release. A publicação nas lojas não está automatizada e não usa credenciais de desenvolvedor no repositório.
+Envios para `main`, tags, pull requests e execuções manuais geram artefatos, mas não publicam releases. Para distribuir uma versão aprovada, crie a release manualmente no GitHub e anexe os três arquivos de `dist/`. A publicação nas lojas também é manual. Não há credenciais de desenvolvedor no repositório.
+
+A versão 1.0.0 foi consolidada com as correções do painel e do player. Sua consolidação substitui o pacote inicial sob solicitação do mantenedor. Nas próximas atualizações, use uma versão nova e não mova tags de versões já distribuídas.
 
 ## Chrome Web Store
 

@@ -9,6 +9,7 @@ const lock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'u
 const popup = fs.readFileSync(path.join(root, 'clique-limpo/popup.html'), 'utf8');
 if (pkg.version !== manifest.version || lock.version !== manifest.version || lock.packages[''].version !== manifest.version || !popup.includes(`v${manifest.version}</span>`)) throw new Error('Versões do painel, manifesto e pacote devem coincidir');
 if (manifest.description.length > 132) throw new Error('Descrição do manifesto excede 132 caracteres');
+for (const file of ['LICENSE.md', 'docs/TERMOS_DE_USO.md', 'docs/PRIVACIDADE.md']) if (!fs.existsSync(path.join(root, file))) throw new Error(`Documento obrigatório ausente: ${file}`);
 if (process.env.GITHUB_REF?.startsWith('refs/tags/') && process.env.GITHUB_REF !== `refs/tags/v${manifest.version}`) throw new Error('A tag deve corresponder à versão do manifesto');
 const files = [manifest.background.service_worker, manifest.action.default_popup, ...Object.values(manifest.icons || {}), ...manifest.content_scripts.flatMap(script => script.js), 'trackers.json', 'ad-sources.json', ...['active', 'inactive'].flatMap(state => [`icons/face-${state}.svg`, ...[16, 32, 48, 128].map(size => `icons/${state}/${size}.png`)])];
 files.push('icons/github.svg', 'icons/GITHUB-LICENSE.txt');

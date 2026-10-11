@@ -30,8 +30,10 @@ def main():
         if source.is_symlink() or any(part.startswith(".") for part in relative.parts) or source.suffix in {".pem", ".crx", ".log"}:
             raise ValueError("Unexpected extension file: {}".format(relative))
         extension_files.append((source, relative.as_posix()))
+    extension_files.append((ROOT / "LICENSE.md", "LICENSE.txt"))
     manual_files = [(source, "clique-limpo/" + name) for source, name in extension_files]
     manual_files.append((ROOT / "README.md", "README.md"))
+    manual_files.append((ROOT / "LICENSE.md", "LICENSE.md"))
     manual_files.extend((source, source.relative_to(ROOT).as_posix()) for source in (ROOT / "docs").rglob("*") if source.is_file())
     manual = OUTPUT / "Clique-Limpo.zip"
     store = OUTPUT / "Clique-Limpo-loja.zip"

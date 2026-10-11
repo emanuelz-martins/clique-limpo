@@ -1,6 +1,6 @@
 # Política de privacidade
 
-Esta política descreve o comportamento do Clique Limpo 1.0.3.
+Esta política descreve o comportamento do Clique Limpo 1.0.0 consolidado.
 
 ## Processamento de páginas
 

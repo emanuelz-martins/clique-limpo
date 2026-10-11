@@ -72,6 +72,9 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     assert.equal(await popup.locator('#reload-notice').textContent(), 'Ao ativar, a página será recarregada.');
     assert.equal(await popup.locator('#toggle-hint, #description, .scope, #state-label').count(), 0);
     assert.equal((await popup.locator('#enabled').boundingBox()).width, 128);
+    const activationBounds = await popup.locator('#enabled').boundingBox();
+    const playerBounds = await popup.locator('.tracking').boundingBox();
+    assert.ok(playerBounds.y - activationBounds.y - activationBounds.height >= 24, 'Botão e cartão do player devem ter espaço entre eles');
     assert.equal(await popup.locator('#player-hint').textContent(), 'Ative se o vídeo não começar ou estiver em outra língua.');
     await popup.locator('#enabled').click();
     await waitForState(true);

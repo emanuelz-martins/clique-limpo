@@ -5,7 +5,7 @@
 
 Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente, apenas na aba escolhida.
 
-**Versão atual: 1.0.3.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
+**Versão atual: 1.0.0 consolidada.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
 
 <div align="center">
   <img src="docs/images/painel.png" alt="Painel do Clique Limpo com a proteção ativada" width="100%" />
@@ -87,6 +87,14 @@ Não há telemetria, sincronização de preferências, código remoto ou envio d
 
 Consulte a [política de privacidade](docs/PRIVACIDADE.md) para conhecer os dados utilizados e como removê-los.
 
+## Uso gratuito e licença
+
+O Clique Limpo pode ser usado gratuitamente em dispositivos pessoais, educacionais e profissionais. É permitido estudar, adaptar e compartilhar cópias gratuitamente, mantendo a licença, os créditos e a identificação das modificações.
+
+A revenda é proibida, inclusive de versões modificadas. Não é permitido cobrar por licença, download, acesso, atualização ou recursos, nem incluir o aplicativo em pacotes pagos ou monetizar sua distribuição com anúncios próprios. O código está disponível sob uma licença específica de distribuição gratuita.
+
+Consulte a [licença completa](LICENSE.md) e os [termos de uso](docs/TERMOS_DE_USO.md). Os termos também podem ser abertos pelo rodapé do painel. Componentes de terceiros mantêm suas licenças originais.
+
 ## Limitações
 
 A detecção é heurística: pode deixar passar anúncios ou classificar um elemento legítimo incorretamente. A extensão não garante anonimato, bloqueio de todos os anúncios ou invisibilidade online.
@@ -103,10 +111,10 @@ docs/              Imagens, privacidade e guias
 demo/              Demonstração local com camadas simuladas
 tests/             Testes da extensão real em navegador isolado
 scripts/           Verificação, geração de ícones e empacotamento
-.github/workflows/ Validação e releases automáticas
+.github/workflows/ Validação e geração de artefatos
 ```
 
-O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.3` geram uma release com `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256, depois que os testes passam. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas.
+O GitHub Actions verifica o projeto, executa os testes e gera artefatos. Ele não publica releases automaticamente. Uma versão só deve ser disponibilizada depois da validação local e no navegador. Os pacotes de distribuição são `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas. Ambos incluem a licença do aplicativo.
 
 As releases do GitHub não atualizam instalações manuais automaticamente. Veja os guias de [desenvolvimento](docs/DESENVOLVIMENTO.md) e [publicação](docs/PUBLICACAO.md).
 

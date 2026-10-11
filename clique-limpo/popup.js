@@ -93,7 +93,7 @@ $("compatibility").addEventListener("change", event => {
   state = { ...state, compatibility };
   void act(async () => {
     const previousDocumentId = state.documentId;
-    const result = await chrome.runtime.sendMessage({ type: "SET_PLAYER_COMPATIBILITY", tabId, compatibility, documentId: state.documentId, pageUrl: state.pageUrl });
+    const result = await savePlayerOption(compatibility);
     if (!result?.ok) throw new Error(result?.error || "Não foi possível alterar a opção do player.");
     let confirmed = false;
     for (let attempt = 0; attempt < (result.reloaded ? 60 : 15); attempt++) {
@@ -107,6 +107,26 @@ $("compatibility").addEventListener("change", event => {
     $("feedback").textContent = compatibility ? "Opção do player ativada. Página recarregada." : "Opção do player desativada.";
   });
 });
+async function savePlayerOption(compatibility) {
+  // Unpacked updates can load the new popup while the preceding worker is still
+  // running. Use stable browser APIs instead of requiring a new worker command.
+  const page = await chrome.webNavigation.getFrame({ tabId, frameId: 0 });
+  if (!page || page.documentId !== state.documentId || page.url !== state.pageUrl || !/^https?:/.test(page.url)) {
+    throw new Error("A página mudou. Reabra o painel para ajustar o player.");
+  }
+  const key = `site:${new URL(page.url).hostname}`;
+  const stored = await chrome.storage.local.get(key);
+  const shouldReload = compatibility && stored[key]?.compatibility !== true;
+  await chrome.storage.local.set({ [key]: { ...stored[key], compatibility } });
+  if (shouldReload) {
+    const current = await chrome.webNavigation.getFrame({ tabId, frameId: 0 });
+    if (current?.documentId === page.documentId && current.url === page.url) {
+      await chrome.tabs.reload(tabId);
+      return { ok: true, reloaded: true };
+    }
+  }
+  return { ok: true, reloaded: false };
+}
 $("scan").addEventListener("click", () => void act(async () => {
   await chrome.tabs.sendMessage(tabId, { type: "SCAN" }, { frameId: 0 });
   await new Promise(resolve => setTimeout(resolve, 300));
