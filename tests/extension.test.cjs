@@ -9,6 +9,11 @@ const { chromium } = require('playwright');
 test('Extensão real no Chromium', { timeout: 120000 }, async t => {
   let body = '';
   const server = http.createServer((request, response) => {
+    if (request.url.startsWith('/pick-focus-frame')) {
+      response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+      response.end('<!doctype html><input id="frame-input"><script>window.frameEscapes=0;window.addEventListener("keydown",event=>{if(event.key==="Escape"){window.frameEscapes++;event.stopImmediatePropagation();}},true);</script>');
+      return;
+    }
     if (request.url.startsWith('/audio-choice-frame')) {
       response.writeHead(200, { 'Content-Type':'text/html; charset=utf-8' });
       response.end(`<!doctype html><button id="english">English</button><button id="portuguese">Portuguese</button><button id="play">Play</button><button id="pause">Pause</button><output id="selected">English</output><script>
@@ -421,6 +426,46 @@ test('Extensão real no Chromium', { timeout: 120000 }, async t => {
       assert.equal((await status()).manualTotal, 1);
       await setEnabled(page, false);
       await wait(() => page.locator('#normal').evaluate(element => getComputedStyle(element).display !== 'none'));
+    });
+    await t.test('Esc cancela mesmo com um ouvinte de teclado do site e restaura o foco', async () => {
+      await visit('<input id="search"><script>window.siteEscapes=0;window.addEventListener("keydown",event=>{if(event.key==="Escape"){window.siteEscapes++;event.stopImmediatePropagation();}},true);</script>');
+      await page.locator('#search').focus();
+      await message('PICK');
+      await page.keyboard.press('Escape');
+      await wait(async () => !(await status()).picking);
+      assert.equal(await page.locator('[data-clique-limpo-ui]').count(), 0);
+      assert.equal(await page.evaluate(() => window.siteEscapes), 0);
+      assert.equal(await page.evaluate(() => document.activeElement.id), 'search');
+      assert.equal((await status()).manualTotal, 0);
+      await page.keyboard.press('Escape');
+      assert.equal(await page.evaluate(() => window.siteEscapes), 1, 'Fora da seleção, o site continua recebendo Esc');
+    });
+    await t.test('Esc cancela seleção com foco no player de outra origem', async () => {
+      await visit(`<iframe id="player" src="http://unknown-media.test:${server.address().port}/pick-focus-frame" style="width:700px;height:400px"></iframe>`);
+      const frame = page.frames().find(frame => frame.url().includes('/pick-focus-frame'));
+      await frame.locator('#frame-input').focus();
+      await message('PICK');
+      await page.keyboard.press('Escape');
+      await wait(async () => !(await status()).picking);
+      assert.equal((await status()).manualTotal, 0);
+      // The player can take focus back independently after the picker starts.
+      await message('PICK');
+      await frame.locator('#frame-input').focus();
+      await page.keyboard.press('Escape');
+      await wait(async () => !(await status()).picking);
+      assert.equal(await page.locator('[data-clique-limpo-ui]').count(), 0);
+    });
+    await t.test('botão Cancelar funciona sem disparar o ouvinte de clique do site', async () => {
+      await visit('<button id="normal">Normal</button><script>window.siteClicks=0;window.addEventListener("click",event=>{window.siteClicks++;event.stopImmediatePropagation();},true);</script>');
+      await message('PICK');
+      await page.keyboard.press('Enter');
+      await wait(async () => !(await status()).picking);
+      assert.equal(await page.evaluate(() => window.siteClicks), 0);
+      assert.equal((await status()).manualTotal, 0);
+      await message('PICK');
+      await page.locator('#normal').click();
+      assert.equal((await status()).manualTotal, 1);
+      assert.equal(await page.evaluate(() => window.siteClicks), 0);
     });
     await t.test('bloqueia fontes de pop-up no site conhecido e respeita pausa', async () => {
       const knownPage = await context.newPage();

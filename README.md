@@ -4,7 +4,7 @@
 
 Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente por aba e acompanha a navegação dentro do site escolhido.
 
-**Versão atual: 1.0.1.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
+**Versão atual: 1.0.2.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
 
 ## Instalação
 
@@ -59,6 +59,8 @@ Se o vídeo não iniciar, experimente **Destravar player de vídeo** no painel e
 
 Os contadores do painel correspondem à página principal e à visita atual. Não agregam os contadores dos frames internos.
 
+Para sair de **Escolher elemento para ocultar**, pressione **Esc** ou use **Cancelar** na barra da seleção. O foco volta ao elemento anterior. O cancelamento também é encaminhado quando o teclado está dentro de um frame compatível com os scripts da extensão.
+
 ## Dicas na página
 
 ![Aviso de orientação do Clique Limpo](docs/images/dica.png)
@@ -99,7 +101,7 @@ scripts/           Verificação, geração de ícones e empacotamento
 .github/workflows/ Validação e releases automáticas
 ```
 
-O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.1` geram uma release com `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256, depois que os testes passam. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas.
+O GitHub Actions verifica o projeto e executa os testes. Tags no formato `v1.0.2` geram uma release com `Clique-Limpo.zip`, `Clique-Limpo-loja.zip` e suas somas SHA-256, depois que os testes passam. O segundo ZIP contém `manifest.json` na raiz e é destinado aos painéis das lojas.
 
 As releases do GitHub não atualizam instalações manuais automaticamente. Veja os guias de [desenvolvimento](docs/DESENVOLVIMENTO.md) e [publicação](docs/PUBLICACAO.md).
 

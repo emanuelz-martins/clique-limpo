@@ -22,6 +22,18 @@
   const recovery = new Set();
   const observed = new WeakSet();
   let picking = null;
+  // Register at document start, before site shortcuts. Frame key events do not
+  // bubble into the top document, so route their cancellation through the worker.
+  window.addEventListener("keydown", event => {
+    if (event.key !== "Escape") return;
+    if (picking) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      stopPick();
+    } else if (embedded && enabled && documentId) {
+      void chrome.runtime.sendMessage({ type: "CANCEL_PICK", documentId }).catch(() => {});
+    }
+  }, true);
   const properties = ["display", "pointer-events", "visibility"];
   window.addEventListener("clique-limpo:popup-blocked", () => { if (enabled) blockedPopups++; });
 
@@ -170,7 +182,12 @@
   }
 
   function guard(event) {
-    if (!scanEnabled() || picking) return;
+    if (picking) {
+      if (event.type === "click") picking.choose(event);
+      else if (["pointerdown", "mousedown"].includes(event.type)) picking.cancelDown(event);
+      return;
+    }
+    if (!scanEnabled()) return;
     // Consume the rest of a blocked gesture after the overlay disappears.
     // Otherwise mouseup/click could reach an unrelated element below it.
     if (["pointerdown", "touchstart"].includes(event.type)) gestureUntil = 0;
@@ -220,27 +237,31 @@
 
   function stopPick() {
     if (!picking) return;
-    const { ui, move, choose, key, cancelDown } = picking;
+    const { ui, move, originalFocus } = picking;
     window.removeEventListener("pointermove", move, true);
-    window.removeEventListener("click", choose, true);
-    window.removeEventListener("pointerdown", cancelDown, true);
-    window.removeEventListener("mousedown", cancelDown, true);
-    window.removeEventListener("keydown", key, true);
     ui.remove();
     picking = null;
+    if (originalFocus?.isConnected) originalFocus.focus({ preventScroll: true });
   }
 
   function startPick() {
     stopPick();
+    const originalFocus = document.activeElement;
     const ui = document.createElement("div");
     ui.setAttribute("data-clique-limpo-ui", "");
     ui.style.cssText = "position:fixed!important;inset:0!important;pointer-events:none!important;z-index:2147483647!important;display:block!important;";
     const shadow = ui.attachShadow({ mode: "closed" });
     const box = document.createElement("div");
-    box.style.cssText = "position:fixed;border:2px solid #00d6ac;background:rgba(0,214,172,.12);box-sizing:border-box;";
+    box.style.cssText = "position:fixed;border:2px solid #e24b4b;background:rgba(226,75,75,.12);box-sizing:border-box;";
     const label = document.createElement("div");
-    label.textContent = "Clique no elemento para ocultar • Esc cancela";
-    label.style.cssText = "position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:12px 18px;background:#10251f;color:white;border-radius:10px;font:14px system-ui;box-shadow:0 4px 24px #0004;";
+    label.textContent = "Clique no elemento para ocultar · Esc cancela";
+    label.style.cssText = "position:fixed;top:16px;left:50%;transform:translateX(-50%);padding:10px 14px;background:#242222;color:#f4f2f1;border:1px solid #61504c;border-radius:12px;font:13px system-ui;box-shadow:0 4px 24px #0004;display:flex;align-items:center;gap:12px;max-width:calc(100vw - 32px);";
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancelar";
+    cancel.setAttribute("aria-label", "Cancelar seleção de elemento");
+    cancel.style.cssText = "pointer-events:auto;border:0;border-radius:16px;padding:7px 12px;background:#e24b4b;color:white;font:600 12px system-ui;cursor:pointer;flex-shrink:0;";
+    label.append(cancel);
     shadow.append(box, label);
     document.documentElement.append(ui);
     const targetOf = event => event.composedPath().find(node => node instanceof Element && node !== document.body && node !== document.documentElement && !node.hasAttribute("data-clique-limpo-ui"));
@@ -258,13 +279,10 @@
       stopPick();
       if (target) hide(target, "Ocultado manualmente", true);
     };
-    const key = event => { if (event.key === "Escape") { event.preventDefault(); event.stopImmediatePropagation(); stopPick(); } };
-    picking = { ui, move, choose, key, cancelDown };
+    picking = { ui, move, choose, cancelDown, originalFocus };
     window.addEventListener("pointermove", move, true);
-    window.addEventListener("pointerdown", cancelDown, true);
-    window.addEventListener("mousedown", cancelDown, true);
-    window.addEventListener("click", choose, true);
-    window.addEventListener("keydown", key, true);
+    window.focus();
+    cancel.focus({ preventScroll: true });
   }
 
   async function refreshConfig() {
@@ -312,6 +330,10 @@
     } else if (message?.type === "PICK") {
       if (enabled) startPick();
       respond({ ok: enabled });
+    } else if (message?.type === "STOP_PICK") {
+      const cancelled = !embedded && picking !== null && documentId === message.documentId;
+      if (cancelled) stopPick();
+      respond({ ok: cancelled });
     }
   });
 

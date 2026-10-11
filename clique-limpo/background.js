@@ -212,6 +212,14 @@ async function claimHint(message, sender) {
   return { show: true };
 }
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
+  if (message?.type === "CANCEL_PICK" && Number.isInteger(sender.tab?.id) && sender.frameId !== 0) {
+    void enqueue(async () => {
+      const page = await currentPage(sender.tab.id);
+      if (page?.documentId !== message.documentId) return { ok: false };
+      return chrome.tabs.sendMessage(sender.tab.id, { type: "STOP_PICK", documentId: page.documentId }, { frameId: 0 });
+    }).then(respond, () => respond({ ok: false }));
+    return true;
+  }
   if (Number.isInteger(sender.tab?.id) && message?.type === 'CLAIM_HINT') {
     void enqueue(() => claimHint(message, sender)).then(respond, () => respond({ show: false }));
     return true;
