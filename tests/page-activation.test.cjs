@@ -157,19 +157,25 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
         await page.locator('#film').click();
         const child = await opened;
         // Protected links deliberately create a blank tab before navigating.
-        await child.waitForURL(`${address}/film?early=1`);
-        await child.waitForLoadState();
-        await child.bringToFront();
-        const childId = await idForActiveTab();
-        await wait(async () => (await status(childId)).ready && (await status(childId)).enabled && (await status(childId)).hidden === 1);
-        assert.equal(earlyProbes, 0, 'A guia interna deve bloquear os scripts de anúncio desde o carregamento');
-        assert.equal(await child.evaluate(() => window.earlyAdRan), undefined);
-        assert.ok((await rules()).every(rule => rule.condition.tabIds.includes(childId)));
-        assert.equal((await status(id)).enabled, false, 'A origem pausa enquanto a guia filha está selecionada');
-        await child.close();
-        await page.bringToFront();
+        try {
+          await child.waitForURL(`${address}/film?early=1`);
+          await child.waitForLoadState();
+          await child.bringToFront();
+          const childId = await idForActiveTab();
+          await wait(async () => (await status(childId)).ready && (await status(childId)).enabled && (await status(childId)).hidden === 1);
+          assert.equal(earlyProbes, 0, 'A guia interna deve bloquear os scripts de anúncio desde o carregamento');
+          assert.equal(await child.evaluate(() => window.earlyAdRan), undefined);
+          assert.ok((await rules()).every(rule => rule.condition.tabIds.includes(childId)));
+          assert.equal((await status(id)).enabled, false, 'A origem pausa enquanto a guia filha está selecionada');
+        } catch (error) {
+          error.message += `; URL da guia filha: ${child.url()}`;
+          throw error;
+        } finally {
+          await child.close();
+          await page.bringToFront();
+          await page.locator('#film').evaluate(el => el.remove());
+        }
         await wait(async () => (await status(id)).enabled);
-        await page.locator('#film').evaluate(el => el.remove());
       }
     });
 

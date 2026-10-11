@@ -15,6 +15,8 @@ npm.cmd test
 
 Os testes criam perfis temporários e usam páginas locais simuladas. Outro navegador Chromium compatível com extensões descompactadas pode ser indicado pela variável `CLIQUE_LIMPO_BROWSER`.
 
+Os arquivos de testes de navegador executam em sequência: eles dependem de foco e de abas ativas, e abrir vários perfis simultaneamente disputa recursos do runner. Os cenários continuam verificando navegação e interações entre várias abas dentro do mesmo perfil.
+
 | Comando | Finalidade |
 | --- | --- |
 | `npm run check` | Confere versões, manifesto, arquivos e sintaxe. |
