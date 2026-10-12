@@ -3,6 +3,7 @@
   const detector = globalThis.CliqueLimpoDetector;
   let enabled = false;
   let compatibility = false;
+  let strictPopups = false;
   const embedded = window !== window.top;
   const scanEnabled = () => enabled && !(compatibility && embedded);
   let host = "";
@@ -215,25 +216,48 @@
   }
 
   function openInternalTab(event) {
-    if (!enabled || picking || !event.isTrusted || event.defaultPrevented || event.altKey || event.shiftKey) return;
+    if (!enabled || picking || !event.isTrusted || event.defaultPrevented || event.altKey) return;
     if (event.type === "click" && event.button !== 0 || event.type === "auxclick" && event.button !== 1) return;
     const link = event.composedPath().find(element => element instanceof HTMLAnchorElement && element.href);
     if (!link || link.hasAttribute("download")) return;
     const modified = event.ctrlKey || event.metaKey || event.type === "auxclick" && event.button === 1;
-    if (!modified && !(event.type === "click" && event.button === 0 && link.target.toLowerCase() === "_blank")) return;
+    const target = (link.target || document.querySelector('base[target]')?.target || '_self').toLowerCase();
+    if (!modified && !event.shiftKey && ['_self', '_parent', '_top'].includes(target)) return;
     try {
       const destination = new URL(link.href);
-      if (!/^https?:$/.test(destination.protocol) || destination.origin !== new URL(pageUrl).origin) return;
+      if (!/^https?:$/.test(destination.protocol) || !strictPopups && destination.origin !== new URL(pageUrl).origin) return;
+      if (!link.getClientRects().length || getComputedStyle(link).visibility !== 'visible') return;
     } catch { return; }
     event.preventDefault();
     event.stopImmediatePropagation();
     const url = link.href;
-    void chrome.runtime.sendMessage({ type: "OPEN_PROTECTED_LINK", url, documentId, pageUrl, active: !modified })
+    void chrome.runtime.sendMessage({ type: "OPEN_PROTECTED_LINK", url, documentId, pageUrl, active: !modified, newWindow: event.shiftKey })
       .then(result => { if (!result?.ok) throw new Error(result?.error); })
-      .catch(() => { location.href = url; });
+      .catch(() => { if (!globalThis.CliqueLimpoPopupPolicy.advertisement(url)) location.href = url; });
   }
   window.addEventListener("click", openInternalTab, true);
   window.addEventListener("auxclick", openInternalTab, true);
+  const authorizedForms = new WeakSet();
+  const requestSubmit = HTMLFormElement.prototype.requestSubmit;
+  window.addEventListener('submit', event => {
+    const form = event.target;
+    if (authorizedForms.has(form)) return;
+    if (!strictPopups || !enabled || !event.isTrusted || event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
+    const submitter = event.submitter;
+    const target = (submitter?.getAttribute('formtarget') || form.target || document.querySelector('base[target]')?.target || '_self').toLowerCase();
+    if (['_self', '_parent', '_top'].includes(target)) return;
+    const action = new URL(submitter?.getAttribute('formaction') || form.action, document.baseURI);
+    const method = (submitter?.getAttribute('formmethod') || form.method).toLowerCase();
+    if (!/^https?:$/.test(action.protocol) || method === 'dialog') return;
+    if (method === 'get') action.search = new URLSearchParams(new FormData(form, submitter || undefined)).toString();
+    event.preventDefault(); event.stopImmediatePropagation();
+    void chrome.runtime.sendMessage({ type: 'AUTHORIZE_FORM_TARGET', url: action.href, documentId, pageUrl }).then(result => {
+      if (!result?.ok || !form.isConnected) return;
+      authorizedForms.add(form);
+      try { Reflect.apply(requestSubmit, form, submitter ? [submitter] : []); }
+      finally { authorizedForms.delete(form); }
+    }).catch(() => {});
+  }, true);
 
   function stopPick() {
     if (!picking) return;
@@ -293,9 +317,10 @@
       pageUrl = config.pageUrl;
       enabled = config.enabled;
       compatibility = config.compatibility === true;
+      strictPopups = config.strictPopups === true;
       ready = true;
       globalThis.CliqueLimpoTips?.update(config);
-      window.dispatchEvent(new CustomEvent("clique-limpo:config", { detail: JSON.stringify({ enabled, host, compatibility, antiTraps: config.antiTraps !== false }) }));
+      window.dispatchEvent(new CustomEvent("clique-limpo:config", { detail: JSON.stringify({ enabled, popupProtection: config.popupProtection, host, compatibility, antiTraps: config.antiTraps !== false }) }));
       if (scanEnabled()) {
         observeRoot(document);
         for (const root of roots) schedule(root);
@@ -320,6 +345,9 @@
       respond({ ready, enabled, compatibility, host, documentId, pageUrl, hidden: hidden.size, blocked, blockedPopups, automaticTotal, manualTotal, picking: !!picking });
     } else if (message?.type === "CONFIG_CHANGED") {
       void refreshConfig();
+      respond({ ok: true });
+    } else if (message?.type === 'POPUP_CONTAINED') {
+      if (!documentId || message.documentId === documentId) blockedPopups++;
       respond({ ok: true });
     } else if (message?.type === "HINT_CANDIDATE") {
       globalThis.CliqueLimpoTips?.candidate(message.documentId);

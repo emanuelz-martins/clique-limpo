@@ -143,7 +143,7 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       await page.waitForFunction(() => getComputedStyle(document.getElementById('trap')).display === 'none');
       assert.equal(await page.evaluate(() => window.siteClicks), 0, 'O site não recebe o clique de ativação do aviso');
       assert.equal(receivedSiteClicks, 0, 'Nenhum clique foi enviado pelo documento anterior ao recarregamento');
-      assert.equal((await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).length, 3);
+      assert.equal((await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).length, 6);
       const state = await status();
       await worker.evaluate(message => enqueue(() => setPageEnabled(message)), { tabId: id, documentId: state.documentId, pageUrl: state.pageUrl, enabled: false });
       await waitForState(false);

@@ -1,6 +1,6 @@
 # Política de privacidade
 
-Esta política descreve o comportamento do Clique Limpo 1.0.3.
+Esta política descreve o comportamento do Clique Limpo 1.0.4.
 
 ## Processamento de páginas
 
@@ -16,11 +16,11 @@ O armazenamento local, sem sincronização entre dispositivos, contém:
 - Preferência de exibição de dicas e confirmação da orientação inicial.
 - Até 64 origens de sites que receberam uma dica, com a data do aviso, para limitar a repetição. Uma origem contém protocolo, domínio e porta, sem o caminho da página.
 
-O armazenamento de sessão contém a ativação por aba e origem e o horário do último aviso global. A ativação não é preservada após reiniciar o navegador ou recarregar a extensão. Contadores e elementos ocultados são mantidos no documento da página.
+O armazenamento de sessão contém a ativação por aba e origem, o endereço da última página protegida para restaurar desvios conhecidos, as associações de abas abertas com autorização e o horário do último aviso global. A validação de formulários usa um hash SHA-256 do destino, o identificador do documento e um prazo de três segundos, sem armazenar os campos do formulário nem seu destino em texto nessa autorização. Autorizações expiradas não são aceitas e são removidas na reinicialização do serviço; fechar a aba de origem ou desativar a proteção remove suas autorizações. A ativação não é preservada após reiniciar o navegador ou recarregar a extensão. Contadores e elementos ocultados são mantidos no documento da página.
 
 ## Permissões
 
-O acesso a páginas HTTP e HTTPS permite inspecionar e proteger o conteúdo. `storage` guarda os estados descritos acima. `webNavigation` acompanha navegações e novas abas. `declarativeNetRequestWithHostAccess` aplica regras de rede às abas selecionadas e protegidas, sem ler o corpo das requisições.
+O acesso a páginas HTTP e HTTPS permite inspecionar e proteger o conteúdo. `storage` guarda os estados descritos acima. `webNavigation` acompanha navegações e novas abas. `declarativeNetRequestWithHostAccess` aplica regras de rede às abas manualmente protegidas, inclusive em segundo plano, sem ler o corpo das requisições. A API de abas permite abrir links autorizados e fechar alvos suspeitos associados à origem protegida.
 
 As listas de domínios bloqueados são incluídas no pacote; não são baixadas automaticamente. A extensão não solicita permissão para notificações do sistema.
 

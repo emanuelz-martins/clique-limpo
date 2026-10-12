@@ -1,10 +1,11 @@
 /* Page-world hook: inline advertising code can run inside nested media frames. */
 (() => {
   "use strict";
-  const adHosts = ["asiafilm.org", "budgetezy.org", "spartanamicus.com", "linkonclick.com", "ay267.com"];
+  const adHosts = ["asiafilm.org", "budgetezy.org", "spartanamicus.com", "linkonclick.com", "ay267.com", "mequyvgfqzj.com", "zxggtzxmgijtea.com", "adsco.re"];
   const mediaHosts = ["plenoflu.com", "superflixapi.quest", "vaiquecol.com"];
   const protectedSites = ["pobreflixtvhub.com"];
   let enabled = false;
+  let popupProtection = false;
   let compatibility = false;
   const nativeOpen = window.open;
   const nativeDispatch = window.dispatchEvent.bind(window);
@@ -196,11 +197,12 @@
 
   let antiTraps = true;
   window.addEventListener("clique-limpo:config", event => {
-    if (event.detail === "enabled") enabled = true;
-    if (event.detail === "disabled") enabled = false;
+    if (event.detail === "enabled") { enabled = true; popupProtection = true; }
+    if (event.detail === "disabled") { enabled = false; popupProtection = false; }
     try {
       const config = JSON.parse(event.detail);
       if (typeof config.enabled === "boolean") enabled = config.enabled;
+      popupProtection = typeof config.popupProtection === 'boolean' ? config.popupProtection : enabled;
       if (typeof config.compatibility === "boolean") compatibility = config.compatibility;
       if (typeof config.antiTraps === "boolean") antiTraps = config.antiTraps;
       if (typeof config.host === "string") {
@@ -217,13 +219,13 @@
   });
 
   const isGuardedContext = () => {
-    if (!enabled) return false;
+    if (!popupProtection) return false;
     if (embedded) return guardedFrame();
     return isProtectedHost(location.hostname);
   };
 
   function report() { nativeDispatch(new NativeEvent("clique-limpo:popup-blocked")); }
-  window.open = function(url, target, ...args) {
+  function wrapOpen(original, frameAccess = false) { return function(url, target, ...args) {
     // Observed flow: open('', '_blank'), then popup.location.replace(adUrl).
     const blank = url === undefined || url === null || url === "" || url === "about:blank";
     let requestedLink = false;
@@ -231,18 +233,54 @@
     
     // Intercept same-tab window.open redirection attempts (_self, _top, _parent)
     const selfNav = !newWindow(target);
-    if (enabled && isGuardedContext() && selfNav && !blank && adDestination(url)) {
+    const guarded = popupProtection && (frameAccess || isGuardedContext());
+    if (guarded && selfNav && !blank && adDestination(url)) {
       report();
       return null;
     }
 
-    const scriptedPopup = isGuardedContext() && newWindow(target) && (blank || !requestedLink);
-    if (enabled && (adDestination(url) || scriptedPopup)) {
+    const scriptedPopup = guarded && newWindow(target) && (blank || !requestedLink);
+    if (popupProtection && (adDestination(url) || scriptedPopup)) {
       report();
       return null;
     }
-    return Reflect.apply(nativeOpen, this, [url, target, ...args]);
-  };
+    return Reflect.apply(original, this, [url, target, ...args]);
+  }; }
+  window.open = wrapOpen(nativeOpen);
+
+  // An inserted iframe's initial realm is usable synchronously, before its
+  // own extension scripts receive configuration. Guard it before returning it.
+  const frameWindows = new WeakMap();
+  const framePrototypes = new WeakSet();
+  function protectFrameWindow(child) {
+    if (!child || child === window) return;
+    try {
+      const original = child.open;
+      if (typeof original === 'function' && original !== frameWindows.get(child)) {
+        const wrapped = wrapOpen(original, true);
+        child.open = wrapped;
+        frameWindows.set(child, wrapped);
+      }
+      hookFrameAccess(child);
+    } catch { /* Cross-origin windows remain protected by their own hook and worker. */ }
+  }
+  function hookFrameAccess(realm) {
+    const prototype = realm.HTMLIFrameElement?.prototype;
+    if (!prototype || framePrototypes.has(prototype)) return;
+    framePrototypes.add(prototype);
+    for (const property of ['contentWindow', 'contentDocument']) {
+      const descriptor = Object.getOwnPropertyDescriptor(prototype, property);
+      if (!descriptor?.get || !descriptor.configurable) continue;
+      try {
+        Object.defineProperty(prototype, property, { ...descriptor, get() {
+          const value = Reflect.apply(descriptor.get, this, []);
+          protectFrameWindow(property === 'contentWindow' ? value : value?.defaultView);
+          return value;
+        } });
+      } catch { /* Respect read-only browser interfaces. */ }
+    }
+  }
+  hookFrameAccess(window);
 
   // Intercept location.assign and location.replace to prevent same-tab ad hijacking
   try {

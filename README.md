@@ -16,7 +16,7 @@
 
 ## Instalação
 
-Versão atual: **1.0.3**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
+Versão atual: **1.0.4**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
 
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
@@ -47,7 +47,7 @@ Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, p
 | Navegar para outra página do mesmo site | Mantém a proteção, inclusive ao recarregar ou usar o histórico. |
 | Abrir um link interno em nova aba | A nova aba herda a ativação. |
 | Abrir uma aba separadamente | Começa desativada, mesmo que o endereço seja igual. |
-| Trocar de aba | Pausa a proteção da aba anterior; voltar a ela reativa a proteção sem recarregar. |
+| Trocar de aba | Pausa a inspeção visual; mantém a contenção de pop-ups e as regras de rede. Ao voltar, retoma a inspeção sem recarregar. |
 | Sair para outro site | Apaga a ativação naquela aba. |
 | Desativar manualmente | Desliga sem recarregar; exige nova ativação. |
 | Reiniciar o navegador ou recarregar a extensão | Exige nova ativação. |
@@ -62,10 +62,16 @@ A primeira tela destaca o botão de ativação, a opção **Destravar vídeo** e
 
 - **Camadas invisíveis:** procura elementos transparentes ou quase transparentes sobre o conteúdo, oculta os suspeitos e tenta interceptar os cliques antes dos ouvintes do site.
 - **Pop-ups e redirecionamentos:** intercepta formas conhecidas de abertura publicitária de janelas, links sintéticos e tentativas de sequestro da aba.
-- **Rastreamento:** bloqueia requisições para uma lista local de domínios enquanto a proteção da aba selecionada está ativa.
+- **Rastreamento:** bloqueia requisições para uma lista local de domínios nas abas manualmente protegidas, inclusive em segundo plano.
 - **Players de vídeo:** inclui ajustes para configurações publicitárias de players compatíveis, tentativas de pausa forçada e preservação da faixa de áudio escolhida em integrações suportadas.
 - **Controle manual:** permite verificar novamente a página, escolher um elemento para ocultar ou restaurar os elementos e desativar a proteção. A ocultação manual é temporária.
 - **Dicas de uso:** explica a ativação na primeira abertura do painel e sugere proteção quando encontra uma camada suspeita em uma página desativada.
+
+No TopFlix analisado (`tontonsfilmeurs.com`), a contenção de novas abas é mais restrita. Links visíveis clicados pelo usuário e formulários validados podem abrir seus destinos; aberturas sem essa autorização são fechadas. A extensão protege o acesso imediato ao `window.open` de iframes da mesma origem e inclui os carregadores alternativos identificados, com bloqueio limitado ao arquivo específico do CloudFront.
+
+Uma abertura pode ser impedida antes da criação ou contida depois pelo navegador. A segunda defesa pode permitir uma requisição inicial ou uma janela breve antes do fechamento; não oferece a mesma garantia do bloqueio anterior à abertura.
+
+[Detalhes da correção e dos testes do TopFlix](docs/CORRECAO_TOPFLIX.md).
 
 Se o vídeo não iniciar ou houver problemas com o idioma, experimente **Destravar vídeo** no painel. Clique no cartão ou no interruptor: a opção é salva para o site e a página recarrega com a configuração aplicada. O botão **?** ao lado de **Destravar vídeo** explica quando usar a opção. A orientação aparece ao passar o mouse ou focar o botão pelo teclado, e também fica disponível para leitores de tela.
 
@@ -112,7 +118,7 @@ A detecção é heurística: pode deixar passar anúncios ou classificar um elem
 
 Ativar depois do carregamento não desfaz cliques ou scripts já executados. A proteção não corrige indisponibilidade de servidores, arquivos de vídeo ausentes ou restrições de incorporações externas.
 
-Regras de rede podem afetar funções legítimas. Se algo deixar de funcionar, desative a proteção, restaure os elementos ou use a opção do player. Páginas internas do navegador e lojas de extensões não são protegidas.
+Regras de rede e contenção de novas abas podem afetar funções legítimas, especialmente janelas abertas por scripts de login ou pagamento. Se algo deixar de funcionar, desative a proteção, restaure os elementos ou use a opção do player. Páginas internas do navegador e lojas de extensões não são protegidas.
 
 ## Desenvolvimento e distribuição
 

@@ -24,6 +24,7 @@ Os arquivos de testes de navegador executam em sequência: eles dependem de foco
 | `npm run test:design` | Verifica o painel e captura imagens. |
 | `npm run test:pages` | Verifica ativação e navegação por abas e origem. |
 | `npm run test:tips` | Verifica orientação, avisos, dispensa e frequência. |
+| `npm run test:popups` | Reproduz a corrida de iframe do TopFlix, testa contenção, carregadores e aberturas legítimas. |
 | `npm run demo` | Serve a demonstração em `http://127.0.0.1:4173`. |
 | `npm run icons` | Gera PNGs a partir dos SVGs do projeto. |
 | `python scripts/package.py` | Gera os ZIPs e somas SHA-256 em `dist/`. |
@@ -34,6 +35,7 @@ Os arquivos de testes de navegador executam em sequência: eles dependem de foco
 - `detector.js`: heurísticas de inspeção dos elementos.
 - `content.js`: varredura, ocultação, restauração, seleção manual e estado do documento.
 - `popup-guard.js`: interceptadores no contexto da página e ajustes de players.
+- `popup-policy.js`: classificação local de destinos e sites com contenção restrita de novas abas.
 - `tips.js`: inspeção passiva e avisos de orientação.
 - `popup.html`, `popup.css`, `popup.js`: interface e comandos do painel.
 - `trackers.json`, `ad-sources.json`: regras locais de rede.

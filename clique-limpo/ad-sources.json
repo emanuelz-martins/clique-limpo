@@ -8,5 +8,32 @@
       "requestDomains": ["acscdn.com", "llvpn.com"],
       "resourceTypes": ["script"]
     }
+  },
+  {
+    "id": 2001,
+    "priority": 2,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": ["mequyvgfqzj.com", "zxggtzxmgijtea.com", "adsco.re"],
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 2002,
+    "priority": 2,
+    "action": { "type": "block" },
+    "condition": {
+      "regexFilter": "^https?://d2klx87bgzngce\\.cloudfront\\.net(:[0-9]+)?/H/njson2csv\\.umd\\.min\\.js([?#]|$)",
+      "resourceTypes": ["script"]
+    }
+  },
+  {
+    "id": 2003,
+    "priority": 2,
+    "action": { "type": "block" },
+    "condition": {
+      "requestDomains": ["asiafilm.org", "budgetezy.org", "spartanamicus.com", "linkonclick.com", "ay267.com", "mequyvgfqzj.com", "zxggtzxmgijtea.com", "adsco.re", "intelligenceadx.com", "tagivi.com", "createlouisville.org"],
+      "resourceTypes": ["main_frame"]
+    }
   }
 ]

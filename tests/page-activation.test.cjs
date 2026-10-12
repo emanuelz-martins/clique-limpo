@@ -80,7 +80,7 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       await wait(() => frame.locator('html').getAttribute('data-clique-limpo-guard').then(value => value === '0.7:active:embedded'));
       assert.equal(await frame.evaluate(() => window.open('https://asiafilm.org/local-test', '_blank')), null);
       assert.equal(await page.evaluate(() => window.canRunAds), true);
-      assert.equal((await rules()).length, 3);
+      assert.equal((await rules()).length, 6);
       assert.ok((await rules()).every(rule => JSON.stringify(rule.condition.tabIds) === JSON.stringify([id])));
       const failed = page.waitForEvent('requestfailed', { predicate: request => request.url().includes('/probe?on') });
       await page.evaluate(url => fetch(url).catch(() => null), `http://mrktmtrcs.net:${port}/probe?on`);
@@ -94,7 +94,7 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       const secondId = await idForActiveTab();
       await wait(async () => (await status(secondId)).ready && !(await status(id)).enabled);
       assert.equal((await status(secondId)).enabled, false, 'Mesmo URL em outra aba começa desligado');
-      assert.deepEqual(await rules(), []);
+      assert.equal((await rules()).length, 6, 'A inspeção pausa, mas a contenção de rede permanece na origem');
       assert.notEqual(await page.locator('#trap').evaluate(el => getComputedStyle(el).display), 'none');
       assert.equal(await page.evaluate(() => typeof window.canRunAds), 'undefined');
       assert.match(await worker.evaluate(id => chrome.action.getTitle({ tabId: id }), id), /desativado/);
@@ -113,7 +113,7 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       assert.match((await failed).failure().errorText, /BLOCKED_BY_CLIENT/);
       assert.equal(earlyProbes, 0, 'A nova página não pode abrir uma janela sem regras de rede');
       assert.equal(await page.evaluate(() => window.earlyAdRan), undefined);
-      assert.equal((await rules()).length, 3);
+      assert.equal((await rules()).length, 6);
       assert.equal((await enable(id, true, previous)).ok, false);
       assert.equal((await status(id)).enabled, true);
       await page.goBack();
@@ -127,7 +127,7 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       await page.reload();
       await wait(async () => (await status(id)).ready && (await status(id)).documentId !== previous.documentId);
       assert.equal((await status(id)).enabled, true);
-      assert.equal((await rules()).length, 3);
+      assert.equal((await rules()).length, 6);
       assert.equal((await enable(id, true, previous)).ok, false);
     });
 
@@ -136,12 +136,12 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       await wait(async () => (await status(id)).enabled);
       await page.evaluate(() => history.pushState({}, '', '/spa'));
       await wait(async () => (await status(id)).enabled && (await status(id)).pageUrl.endsWith('/spa'));
-      assert.equal((await rules()).length, 3);
+      assert.equal((await rules()).length, 6);
       await enable(id);
       await wait(async () => (await status(id)).enabled);
       await page.evaluate(() => location.hash = 'outro');
       await wait(async () => (await status(id)).enabled && (await status(id)).pageUrl.endsWith('#outro'));
-      assert.equal((await rules()).length, 3);
+      assert.equal((await rules()).length, 6);
     });
 
     await t.test('links internos em nova guia herdam proteção, inclusive sem opener', async () => {
@@ -193,7 +193,7 @@ test('Ativação manual acompanha o site em navegações e guias internas', { ti
       const childId = await idForActiveTab();
       await wait(async () => (await status(childId)).ready && !(await status(id)).enabled);
       assert.equal((await status(childId)).enabled, false);
-      assert.deepEqual(await rules(), []);
+      assert.equal((await rules()).length, 6, 'Abrir um link externo não libera a publicidade na origem');
       await child.close();
       await page.bringToFront();
       await wait(async () => (await status(id)).enabled);

@@ -473,7 +473,8 @@ test('Extensão real no Chromium', { timeout: 120000 }, async t => {
       body = '<p>Fixture local do site conhecido</p>';
       await knownPage.goto(`http://www.pobreflixtvhub.com:${port}/test`);
       await setEnabled(knownPage, true);
-      const getRule = () => worker.evaluate(async () => (await chrome.declarativeNetRequest.getSessionRules()).find(rule => rule.id === 2000));
+      const knownTabId = await worker.evaluate(async url => (await chrome.tabs.query({})).find(tab => tab.url === url).id, knownPage.url());
+      const getRule = () => worker.evaluate(async id => (await chrome.declarativeNetRequest.getSessionRules()).find(rule => rule.id === 2000 && rule.condition.tabIds.includes(id)), knownTabId);
       await wait(async () => !!(await getRule()));
       for (const domain of ['acscdn.com', 'llvpn.com']) {
         const failed = knownPage.waitForEvent('requestfailed', { predicate: request => request.url().includes(domain) });
