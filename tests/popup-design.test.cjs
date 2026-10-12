@@ -99,7 +99,7 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     const activationBounds = await popup.locator('#enabled').boundingBox();
     const playerBounds = await popup.locator('.tracking').boundingBox();
     assert.ok(playerBounds.y - activationBounds.y - activationBounds.height >= 24, 'Botão e cartão do player devem ter espaço entre eles');
-    assert.equal(await popup.locator('#player-hint').textContent(), 'Ative se o vídeo não iniciar, o player não responder ou o áudio estiver em um idioma diferente do esperado. Ao ativar, a página será recarregada.');
+    assert.equal(await popup.locator('#player-hint').textContent(), 'Ative se o vídeo não iniciar, o player não responder ou o áudio estiver em outro idioma. Esta opção pode ajudar, mas também pode travar alguns players. Teste com ela ativada e desativada para ver qual funciona melhor neste site. Ao ativar, a página será recarregada.');
     await popup.locator('#player-help').hover();
     await popup.locator('#player-hint').waitFor({ state: 'visible' });
     const hintBounds = await popup.locator('#player-hint').boundingBox();
