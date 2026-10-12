@@ -168,12 +168,27 @@ test('TopFlix: frames síncronos, alvos externos e carregadores alternativos', {
       } finally { await child.close(); await page.bringToFront(); await page.locator('#external').evaluate(el => el.remove()); await page.locator('base').evaluateAll(elements => elements.forEach(el => el.remove())); }
       await wait(async () => (await status()).enabled);
     });
-    for (const method of ['get', 'post']) await t.test(`formulário ${method} autorizado para nova aba`, async () => {
+    await t.test('requestSubmit em formulário oculto não aproveita o clique no player', async () => {
+      const before = formRequests.length;
+      await page.evaluate(action => {
+        const form = document.createElement('form'); form.id = 'fake-form'; form.action = action; form.target = '_blank'; form.style.display = 'none'; document.body.append(form);
+        form.requestSubmit();
+        document.getElementById('play').onclick = () => form.requestSubmit();
+      }, `${external}/form?unwanted=1`);
+      await page.locator('#play').click();
+      await page.waitForTimeout(150);
+      assert.equal(formRequests.length, before, 'Nenhuma navegação foi autorizada para o formulário invisível');
+      await page.locator('#fake-form').evaluate(el => el.remove());
+    });
+    for (const mode of ['get', 'post', 'enter']) await t.test(`formulário ${mode} autorizado para nova aba`, async () => {
+      const method = mode === 'enter' ? 'get' : mode;
       await page.evaluate(({ action, method }) => {
         const form = document.createElement('form'); form.id = 'form'; form.action = action; form.method = method; form.target = '_blank';
         form.innerHTML = '<input name="q" value="hello world"><button id="submit" type="submit">Enviar</button>'; document.body.append(form);
       }, { action: `${external}/form`, method });
-      const opened = context.waitForEvent('page'); await page.locator('#submit').click(); const child = await opened;
+      const opened = context.waitForEvent('page');
+      if (mode === 'enter') await page.locator('#form input').press('Enter'); else await page.locator('#submit').click();
+      const child = await opened;
       try { await child.waitForURL(url => url.pathname === '/form'); await child.waitForLoadState(); assert.equal(child.isClosed(), false); }
       finally { await child.close(); await page.bringToFront(); await page.locator('#form').evaluate(el => el.remove()); }
       assert.equal(formRequests.at(-1).method, method.toUpperCase());

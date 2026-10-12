@@ -62,9 +62,19 @@ function render(next) {
 }
 
 async function readStatus() {
-  const next = await chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 });
-  if (!next?.ready) throw new Error("A proteção ainda está iniciando. Reabra o painel em instantes.");
-  render(next);
+  const [next, page, tab, session] = await Promise.all([
+    chrome.tabs.sendMessage(tabId, { type: "STATUS" }, { frameId: 0 }),
+    chrome.webNavigation.getFrame({ tabId, frameId: 0 }),
+    chrome.tabs.get(tabId),
+    chrome.storage.session.get(`page:${tabId}`)
+  ]);
+  if (!next?.ready || next.documentId !== page?.documentId || next.pageUrl !== page?.url) throw new Error("A proteção ainda está iniciando. Reabra o painel em instantes.");
+  const activation = session[`page:${tabId}`];
+  // Content state may still reflect the previous focus while CONFIG_CHANGED is
+  // queued. Use the trusted session/browser state for the popup's main button.
+  const enabled = tab.active && activation?.enabled === true && activation.origin === new URL(page.url).origin;
+  host = new URL(page.url).hostname;
+  render({ ...next, enabled });
 }
 
 async function toggle(enabled) {

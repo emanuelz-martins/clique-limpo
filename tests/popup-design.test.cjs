@@ -49,10 +49,15 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
       await popup.waitForFunction(() => !document.getElementById('enabled').disabled || document.getElementById('status-pill').textContent === 'Indisponível');
     };
     const waitForState = async enabled => {
-      await popup.waitForFunction(enabled => {
-        const button = document.getElementById('enabled');
-        return !button.disabled && button.getAttribute('aria-pressed') === String(enabled);
-      }, enabled);
+      try {
+        await popup.waitForFunction(enabled => {
+          const button = document.getElementById('enabled');
+          return !button.disabled && button.getAttribute('aria-pressed') === String(enabled);
+        }, enabled);
+      } catch (error) {
+        error.message += '; Estado da origem: ' + JSON.stringify(await worker.evaluate(async id => ({ config: await configForTab(id), tab: await chrome.tabs.get(id), state: await chrome.tabs.sendMessage(id, { type: 'STATUS' }, { frameId: 0 }) }), tabId));
+        throw error;
+      }
     };
     await openPopup();
     await popup.locator('#welcome-dismiss').click();
@@ -124,10 +129,28 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     await popup.locator('.github-link').click();
     const repository = await openedRepository;
     await repository.waitForURL('https://github.com/emanuelz-martins/clique-limpo');
-    await repository.close();
-    await page.bringToFront();
-    await openPopup();
-    await waitForState(true);
+    await popup.waitForFunction(async () => {
+      const tabs = await chrome.tabs.query({});
+      const source = tabs.find(tab => tab.url?.startsWith('http://exemplo.test:'));
+      return !(await chrome.tabs.sendMessage(source.id, { type: 'STATUS' }, { frameId: 0 })).enabled;
+    });
+    // Hold the focus notification to reproduce the stale content snapshot that
+    // slower browsers can expose when the popup opens immediately on return.
+    await worker.evaluate(id => {
+      const original = notifyPage;
+      let release;
+      const hold = new Promise(resolve => { release = resolve; });
+      globalThis.releaseTestFocus = () => { notifyPage = original; release(); };
+      notifyPage = async tabId => { if (tabId === id) await hold; return original(tabId); };
+    }, tabId);
+    try {
+      await repository.close();
+      await page.bringToFront();
+      await openPopup();
+      await waitForState(true);
+      assert.equal((await status()).enabled, false, 'A atualização visual permanece atrasada neste cenário');
+      assert.equal(await popup.locator('#enabled').getAttribute('aria-pressed'), 'true', 'O painel consulta a ativação real mesmo com o snapshot antigo');
+    } finally { await worker.evaluate(() => releaseTestFocus()); }
     assert.equal((await status()).documentId, afterActivation.documentId, 'Voltar à aba protegida não recarrega');
     assert.equal(pageRequests, 2);
     await popup.locator('.tracking').click({ position: { x: 8, y: 23 } });

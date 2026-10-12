@@ -238,19 +238,44 @@
   window.addEventListener("click", openInternalTab, true);
   window.addEventListener("auxclick", openInternalTab, true);
   const authorizedForms = new WeakSet();
+  const formIntents = new WeakMap();
   const requestSubmit = HTMLFormElement.prototype.requestSubmit;
+  function formDestination(form, submitter) {
+    return {
+      target: (submitter?.getAttribute('formtarget') || form.target || document.querySelector('base[target]')?.target || '_self').toLowerCase(),
+      action: new URL(submitter?.getAttribute('formaction') || form.action, document.baseURI),
+      method: (submitter?.getAttribute('formmethod') || form.method).toLowerCase()
+    };
+  }
+  function recordFormIntent(event) {
+    if (!strictPopups || !enabled || !event.isTrusted || event.defaultPrevented) return;
+    const control = event.composedPath().find(node => node instanceof HTMLButtonElement || node instanceof HTMLInputElement);
+    if (!control?.form || !control.getClientRects().length || getComputedStyle(control).visibility !== 'visible') return;
+    const submitter = ['submit', 'image'].includes(control.type) ? control : null;
+    if (event.type === 'click' && !submitter || event.type === 'keydown' && event.key !== 'Enter') return;
+    const form = control.form;
+    const intent = formDestination(form, submitter);
+    formIntents.set(form, intent);
+    // Intent belongs to this specific form and interaction, never to arbitrary
+    // requestSubmit calls made by another listener during a play-button click.
+    setTimeout(() => { if (formIntents.get(form) === intent) formIntents.delete(form); }, 0);
+  }
+  window.addEventListener('click', recordFormIntent, true);
+  window.addEventListener('keydown', recordFormIntent, true);
   window.addEventListener('submit', event => {
     const form = event.target;
     if (authorizedForms.has(form)) return;
     if (!strictPopups || !enabled || !event.isTrusted || event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
     const submitter = event.submitter;
-    const target = (submitter?.getAttribute('formtarget') || form.target || document.querySelector('base[target]')?.target || '_self').toLowerCase();
+    const { target, action, method } = formDestination(form, submitter);
     if (['_self', '_parent', '_top'].includes(target)) return;
-    const action = new URL(submitter?.getAttribute('formaction') || form.action, document.baseURI);
-    const method = (submitter?.getAttribute('formmethod') || form.method).toLowerCase();
     if (!/^https?:$/.test(action.protocol) || method === 'dialog') return;
-    if (method === 'get') action.search = new URLSearchParams(new FormData(form, submitter || undefined)).toString();
     event.preventDefault(); event.stopImmediatePropagation();
+    const intent = formIntents.get(form);
+    formIntents.delete(form);
+    // SubmitEvent.isTrusted also covers requestSubmit() called by site code.
+    if (!intent || intent.action.href !== action.href || intent.method !== method || intent.target !== target) return;
+    if (method === 'get') action.search = new URLSearchParams(new FormData(form, submitter || undefined)).toString();
     void chrome.runtime.sendMessage({ type: 'AUTHORIZE_FORM_TARGET', url: action.href, documentId, pageUrl }).then(result => {
       if (!result?.ok || !form.isConnected) return;
       authorizedForms.add(form);
