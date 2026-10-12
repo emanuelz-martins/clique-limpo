@@ -16,7 +16,7 @@
 
 ## Instalação
 
-Versão atual: **1.0.2**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
+Versão atual: **1.0.3**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
 
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
@@ -67,7 +67,7 @@ A primeira tela destaca o botão de ativação, a opção **Destravar vídeo** e
 - **Controle manual:** permite verificar novamente a página, escolher um elemento para ocultar ou restaurar os elementos e desativar a proteção. A ocultação manual é temporária.
 - **Dicas de uso:** explica a ativação na primeira abertura do painel e sugere proteção quando encontra uma camada suspeita em uma página desativada.
 
-Se o vídeo não iniciar ou houver problemas com o idioma, experimente **Destravar vídeo** no painel. Clique no cartão ou no interruptor: a opção é salva para o site e a página recarrega com a configuração aplicada. A orientação completa fica disponível ao passar o mouse sobre o cartão e para leitores de tela.
+Se o vídeo não iniciar ou houver problemas com o idioma, experimente **Destravar vídeo** no painel. Clique no cartão ou no interruptor: a opção é salva para o site e a página recarrega com a configuração aplicada. O botão **?** ao lado de **Destravar vídeo** explica quando usar a opção. A orientação aparece ao passar o mouse ou focar o botão pelo teclado, e também fica disponível para leitores de tela.
 
 Os contadores do painel correspondem à página principal e à visita atual. Não agregam os contadores dos frames internos.
 

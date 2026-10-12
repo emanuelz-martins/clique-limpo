@@ -13,7 +13,7 @@
       <h1>Clique Limpo</h1>
       <p id="reload-notice">Ao ativar, a página será recarregada.</p>
     </div>
-    <span class="version-badge">v1.0.2</span>
+    <span class="version-badge">v1.0.3</span>
   </header>
   <main>
     <section class="overview" aria-label="Ativação e resumo">
@@ -35,18 +35,21 @@
         </div>
       </section>
 
-      <label class="tracking card" for="compatibility" title="Ative se o vídeo não começar ou estiver em outra língua. Ao ativar, a página será recarregada.">
+      <div class="tracking card">
         <span class="protection">
-          <span>
-            <span class="option-label">Destravar vídeo</span>
-            <small id="player-hint" class="visually-hidden">Ative se o vídeo não começar ou estiver em outra língua.</small>
+          <span class="option-heading">
+            <label class="option-label" for="compatibility">Destravar vídeo</label>
+            <span class="player-help">
+              <button id="player-help" class="help-button" type="button" aria-label="Ajuda sobre destravar vídeo" aria-describedby="player-hint">?</button>
+              <span id="player-hint" class="player-tooltip" role="tooltip">Ative se o vídeo não iniciar, o player não responder ou o áudio estiver em um idioma diferente do esperado. Ao ativar, a página será recarregada.</span>
+            </span>
           </span>
-          <span class="switch">
-            <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo" aria-describedby="player-hint reload-notice" disabled>
+          <label class="switch" for="compatibility">
+            <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo" aria-describedby="player-hint" disabled>
             <span></span>
-          </span>
+          </label>
         </span>
-      </label>
+      </div>
 
       <div class="stats-container">
         <div class="stat-card">

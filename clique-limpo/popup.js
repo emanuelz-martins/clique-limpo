@@ -93,6 +93,11 @@ $("enabled").addEventListener("click", () => {
   state = { ...state, enabled };
   void act(async () => { await toggle(enabled); $("feedback").textContent = enabled ? "Proteção ativada para navegar neste site nesta aba." : "Proteção desativada e elementos restaurados."; });
 });
+document.querySelector('.tracking').addEventListener('click', event => {
+  // Keep the whole card clickable; its help button only explains the option.
+  if (event.target.closest('button,input,label,.player-help')) return;
+  if (!$("compatibility").disabled) $("compatibility").click();
+});
 $("compatibility").addEventListener("change", event => {
   const compatibility = event.target.checked;
   state = { ...state, compatibility };
