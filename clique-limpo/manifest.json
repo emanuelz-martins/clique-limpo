@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Clique Limpo",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Proteção manual por aba contra cliques invisíveis, pop-ups e rastreadores, com controles para players e dicas locais.",
   "minimum_chrome_version": "119",
   "permissions": ["storage", "declarativeNetRequestWithHostAccess", "webNavigation"],

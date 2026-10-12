@@ -63,7 +63,12 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     assert.equal(bounds.width, 380);
     assert.ok(bounds.height <= 600, 'Painel deve caber na altura máxima do navegador');
     const layout = await popup.locator('main').evaluate(element => ({ height: element.clientHeight, content: element.scrollHeight }));
-    assert.ok(layout.content <= layout.height, `As ações devem estar visíveis sem rolagem no estado inicial (${layout.content}/${layout.height}); ${await popup.locator('#feedback').textContent()}`);
+    assert.ok(layout.content > layout.height, 'Ferramentas ficam abaixo da primeira tela, acessíveis por rolagem');
+    const viewport = await popup.locator('main').boundingBox();
+    const tools = await popup.locator('#page-tools').boundingBox();
+    assert.ok(tools.y >= viewport.y + viewport.height - 1, 'Ferramentas não invadem a tela de ativação');
+    const stats = await popup.locator('.stats-container').boundingBox();
+    assert.ok(stats.y + stats.height <= viewport.y + viewport.height, 'Resumo cabe no rodapé da primeira tela');
     const iconTitle = () => worker.evaluate(id => chrome.action.getTitle({ tabId: id }), tabId);
     const status = () => worker.evaluate(id => chrome.tabs.sendMessage(id, { type: 'STATUS' }, { frameId: 0 }), tabId);
     const beforeActivation = await status();
@@ -71,7 +76,7 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     assert.equal(adRequests, 1, 'A página inicial desativada não bloqueia o script simulado');
     assert.equal(await popup.locator('#reload-notice').textContent(), 'Ao ativar, a página será recarregada.');
     assert.equal(await popup.locator('#toggle-hint, #description, .scope, #state-label').count(), 0);
-    assert.equal((await popup.locator('#enabled').boundingBox()).width, 128);
+    assert.equal((await popup.locator('#enabled').boundingBox()).width, 220);
     const activationBounds = await popup.locator('#enabled').boundingBox();
     const playerBounds = await popup.locator('.tracking').boundingBox();
     assert.ok(playerBounds.y - activationBounds.y - activationBounds.height >= 24, 'Botão e cartão do player devem ter espaço entre eles');
@@ -89,6 +94,19 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     const screenshots = path.resolve(__dirname, '../test-results');
     fs.mkdirSync(screenshots, { recursive: true });
     await popup.locator('body').screenshot({ path: path.join(screenshots, 'design-active.png') });
+    await popup.locator('main').hover();
+    await popup.mouse.wheel(0, 500);
+    await popup.waitForFunction(() => {
+      const viewport = document.querySelector('main').getBoundingClientRect();
+      const actions = document.querySelector('.actions').getBoundingClientRect();
+      const footer = document.querySelector('footer').getBoundingClientRect();
+      return actions.top >= viewport.top && footer.bottom <= viewport.bottom;
+    });
+    await popup.locator('body').screenshot({ path: path.join(screenshots, 'design-options.png') });
+    await popup.locator('#scan').click();
+    await popup.waitForFunction(() => document.getElementById('feedback').textContent.startsWith('Verificação solicitada'));
+    const feedback = await popup.locator('#feedback').boundingBox();
+    assert.ok(feedback.y + feedback.height <= 600, 'Confirmação permanece visível após rolar');
     await context.route('https://github.com/emanuelz-martins/clique-limpo', route => route.fulfill({ contentType: 'text/html', body: '<title>Repositório simulado</title>' }));
     const openedRepository = context.waitForEvent('page');
     await popup.locator('.github-link').click();

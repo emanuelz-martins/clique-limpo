@@ -16,7 +16,7 @@
 
 ## Instalação
 
-Versão atual: **1.0.1**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
+Versão atual: **1.0.2**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
 
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
@@ -54,7 +54,9 @@ Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, p
 
 O site é identificado por protocolo, domínio e porta. Preferências de compatibilidade do player são salvas localmente e não ativam a proteção por conta própria.
 
-O ícone do GitHub no rodapé abre este repositório em uma nova aba. O aviso de recarregamento aparece no cabeçalho do painel e nas dicas de ativação.
+A primeira tela destaca o botão de ativação, a opção **Destravar vídeo** e os contadores. Role para baixo, ou use a seta no rodapé, para acessar **Verificar página**, **Ocultar elemento**, **Restaurar e desativar**, GitHub, termos de uso e dicas. O aviso de recarregamento permanece no cabeçalho.
+
+[Ver as ferramentas após rolar o painel](docs/images/painel-opcoes.png).
 
 ## Recursos
 
@@ -65,11 +67,11 @@ O ícone do GitHub no rodapé abre este repositório em uma nova aba. O aviso de
 - **Controle manual:** permite verificar novamente a página, escolher um elemento para ocultar ou restaurar os elementos e desativar a proteção. A ocultação manual é temporária.
 - **Dicas de uso:** explica a ativação na primeira abertura do painel e sugere proteção quando encontra uma camada suspeita em uma página desativada.
 
-Se o vídeo não iniciar ou houver problemas com o idioma, experimente **Destravar player de vídeo** no painel. Clique no cartão ou no interruptor: a opção é salva para o site e a página recarrega com a configuração aplicada.
+Se o vídeo não iniciar ou houver problemas com o idioma, experimente **Destravar vídeo** no painel. Clique no cartão ou no interruptor: a opção é salva para o site e a página recarrega com a configuração aplicada. A orientação completa fica disponível ao passar o mouse sobre o cartão e para leitores de tela.
 
 Os contadores do painel correspondem à página principal e à visita atual. Não agregam os contadores dos frames internos.
 
-Para sair de **Escolher elemento para ocultar**, pressione **Esc** ou use **Cancelar** na barra da seleção. O foco volta ao elemento anterior. O cancelamento também é encaminhado quando o teclado perder foco em alguns casos.
+Para sair de **Ocultar elemento**, pressione **Esc** ou use **Cancelar** na barra da seleção. O foco volta ao elemento anterior. O cancelamento também é encaminhado quando o teclado está dentro de um frame compatível com os scripts da extensão.
 
 ## Dicas na página
 

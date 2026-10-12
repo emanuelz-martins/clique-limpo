@@ -13,70 +13,77 @@
       <h1>Clique Limpo</h1>
       <p id="reload-notice">Ao ativar, a página será recarregada.</p>
     </div>
-    <span class="version-badge">v1.0.1</span>
+    <span class="version-badge">v1.0.2</span>
   </header>
   <main>
-    <aside id="welcome" class="welcome card" hidden aria-labelledby="welcome-title">
-      <h2 id="welcome-title">Seu primeiro clique limpo</h2>
-      <p>Toque na carinha para proteger o site nesta aba. Ela fica feliz quando a proteção está ativa.</p>
-      <p class="welcome-detail">Ao trocar de aba, pausa. Ao voltar, reativa. Links internos do site mantêm a proteção.</p>
-      <button id="welcome-dismiss" type="button">Entendi, vamos lá</button>
-    </aside>
-    <section class="site" aria-label="Proteção nesta página">
-      <div class="site-header">
-        <div><span class="eyebrow">PÁGINA ATUAL</span><div id="hostname">Carregando…</div></div>
-        <span id="status-pill" class="status-pill">Verificando</span>
+    <section class="overview" aria-label="Ativação e resumo">
+      <aside id="welcome" class="welcome card" hidden aria-labelledby="welcome-title">
+        <h2 id="welcome-title">Seu primeiro clique limpo</h2>
+        <p>Toque na carinha para proteger o site nesta aba. Ela fica feliz quando a proteção está ativa.</p>
+        <p class="welcome-detail">Ao trocar de aba, pausa. Ao voltar, reativa. Links internos do site mantêm a proteção.</p>
+        <button id="welcome-dismiss" type="button">Entendi, vamos lá</button>
+      </aside>
+      <section class="site" aria-label="Proteção nesta página">
+        <div class="site-header">
+          <div><span class="eyebrow">PÁGINA ATUAL</span><div id="hostname">Carregando…</div></div>
+          <span id="status-pill" class="status-pill">Verificando</span>
+        </div>
+        <div class="activation">
+          <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="reload-notice" disabled>
+            <img id="activation-face" src="icons/face-inactive.svg" alt="" aria-hidden="true">
+          </button>
+        </div>
+      </section>
+
+      <label class="tracking card" for="compatibility" title="Ative se o vídeo não começar ou estiver em outra língua. Ao ativar, a página será recarregada.">
+        <span class="protection">
+          <span>
+            <span class="option-label">Destravar vídeo</span>
+            <small id="player-hint" class="visually-hidden">Ative se o vídeo não começar ou estiver em outra língua.</small>
+          </span>
+          <span class="switch">
+            <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo" aria-describedby="player-hint reload-notice" disabled>
+            <span></span>
+          </span>
+        </span>
+      </label>
+
+      <div class="stats-container">
+        <div class="stat-card">
+          <strong id="hidden">0</strong>
+          <span>ocultos</span>
+        </div>
+        <div class="stat-card">
+          <strong id="blocked">0</strong>
+          <span>interceptados</span>
+        </div>
       </div>
-      <div class="activation">
-        <button id="enabled" class="activation-button" type="button" aria-pressed="false" aria-label="Ativar proteção nesta página" aria-describedby="reload-notice" disabled>
-          <img id="activation-face" src="icons/face-inactive.svg" alt="" aria-hidden="true">
-        </button>
-      </div>
+
+      <a class="more-options" href="#page-tools" aria-label="Ver ferramentas da página" title="Mais opções">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m6 9 6 6 6-6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </a>
     </section>
 
-    <label class="tracking card" for="compatibility">
-      <span class="protection">
-        <span>
-          <span class="option-label">Destravar player de vídeo</span>
-          <small id="player-hint">Ative se o vídeo não começar ou estiver em outra língua.</small>
-        </span>
-        <span class="switch">
-          <input id="compatibility" type="checkbox" aria-label="Destravar player de vídeo" aria-describedby="player-hint reload-notice" disabled>
-          <span></span>
-        </span>
-      </span>
-    </label>
-
-    <div class="stats-container">
-      <div class="stat-card">
-        <strong id="hidden">0</strong>
-        <span>elementos ocultos</span>
+    <section id="page-tools" class="page-tools" aria-label="Ferramentas da página">
+      <div class="actions">
+        <button id="scan" class="primary" disabled>
+          <span>Verificar página</span>
+          <span aria-hidden="true">↗</span>
+        </button>
+        <button id="pick" class="secondary" disabled>Ocultar elemento</button>
+        <button id="restore" class="quiet" title="Restaurar elementos e desativar a proteção nesta página" disabled>Restaurar e desativar</button>
       </div>
-      <div class="stat-card">
-        <strong id="blocked">0</strong>
-        <span>eventos interceptados</span>
-      </div>
-    </div>
 
-    <div class="actions">
-      <button id="scan" class="primary" disabled>
-        <span>Verificar página agora</span>
-        <span aria-hidden="true">↗</span>
-      </button>
-      <button id="pick" class="secondary" disabled>Escolher elemento para ocultar</button>
-      <button id="restore" class="quiet" disabled>Restaurar elementos e desativar nesta página</button>
-    </div>
-
-    <p id="feedback" role="status" aria-live="polite"></p>
-
-    <footer>
-      <a class="github-link" href="https://github.com/emanuelz-martins/clique-limpo" target="_blank" rel="noopener noreferrer" aria-label="Abrir o repositório do Clique Limpo no GitHub" title="Repositório no GitHub">
-        <img src="icons/github.svg" alt="" aria-hidden="true">
-      </a>
-      <a class="terms-link" href="https://github.com/emanuelz-martins/clique-limpo/blob/main/docs/TERMOS_DE_USO.md" target="_blank" rel="noopener noreferrer">Termos de uso</a>
-      <button id="tips-toggle" type="button" aria-pressed="true" title="Mostrar dicas para ativar a proteção em páginas suspeitas">Dicas ativadas</button>
-    </footer>
+      <footer>
+        <a class="github-link" href="https://github.com/emanuelz-martins/clique-limpo" target="_blank" rel="noopener noreferrer" aria-label="Abrir o repositório do Clique Limpo no GitHub" title="Repositório no GitHub">
+          <img src="icons/github.svg" alt="" aria-hidden="true">
+        </a>
+        <a class="terms-link" href="https://github.com/emanuelz-martins/clique-limpo/blob/main/docs/TERMOS_DE_USO.md" target="_blank" rel="noopener noreferrer">Termos de uso</a>
+        <button id="tips-toggle" type="button" aria-pressed="true" title="Mostrar dicas para ativar a proteção em páginas suspeitas">Dicas</button>
+      </footer>
+    </section>
   </main>
+  <p id="feedback" role="status" aria-live="polite"></p>
   <script src="popup.js"></script>
 </body>
 </html>

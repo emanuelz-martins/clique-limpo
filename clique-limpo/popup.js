@@ -7,7 +7,8 @@ let busy = false;
 
 function renderTips(enabled) {
   $("tips-toggle").setAttribute("aria-pressed", String(enabled));
-  $("tips-toggle").textContent = enabled ? "Dicas ativadas" : "Dicas desativadas";
+  $("tips-toggle").textContent = "Dicas";
+  $("tips-toggle").title = enabled ? "Dicas ativadas. Clique para desativar." : "Dicas desativadas. Clique para permitir novos avisos.";
 }
 $("welcome-dismiss").addEventListener("click", () => {
   $("welcome").hidden = true;
