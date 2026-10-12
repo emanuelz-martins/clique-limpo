@@ -28,6 +28,7 @@ Os arquivos de testes de navegador executam em sequência: eles dependem de foco
 | `npm run demo` | Serve a demonstração em `http://127.0.0.1:4173`. |
 | `npm run icons` | Gera PNGs a partir dos SVGs do projeto. |
 | `python scripts/package.py` | Gera os ZIPs e somas SHA-256 em `dist/`. |
+| `python scripts/package.py --manual-only` | Gera apenas o pacote de instalação manual e sua soma SHA-256 para o GitHub. |
 
 ## Código
 
@@ -44,7 +45,7 @@ Mudanças devem preservar controles de players, eventos legítimos, desativaçã
 
 ## Versões
 
-A cada atualização entregue, incremente o último número: `1.0.1`, `1.0.2`, `1.0.3` e assim por diante. Essas versões identificam o ciclo de correções e validação pelo mantenedor. Só altere para `1.1.0` quando ele pedir explicitamente; uma bateria de testes aprovada não substitui essa decisão.
+A cada atualização entregue, incremente o último número: após `1.1.0`, use `1.1.1`, `1.1.2` e assim por diante. Essas versões identificam o ciclo de correções e validação pelo mantenedor. Só altere o número intermediário quando ele pedir explicitamente; uma bateria de testes aprovada não substitui essa decisão.
 
 Mantenha a mesma versão no manifesto, indicador de `popup.html`, `package.json` e nas duas entradas do projeto em `package-lock.json`. Atualize README e imagens quando a interface mudar.
 

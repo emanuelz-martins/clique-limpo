@@ -28,12 +28,14 @@ jobs:
       - run: npm ci
       - run: npm run check
       - run: npm test
-      - run: python scripts/package.py
+      - run: python scripts/package.py --manual-only
       - name: Guardar pacotes
         uses: actions/upload-artifact@v7
         with:
           name: clique-limpo-pacotes
-          path: dist/*
+          path: |
+            dist/Clique-Limpo.zip
+            dist/SHA256SUMS.txt
           if-no-files-found: error
       - name: Guardar capturas e diagnosticos
         if: always()

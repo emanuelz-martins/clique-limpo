@@ -1,4 +1,5 @@
 """Build manual-install and store-upload archives without third-party packages."""
+import argparse
 import hashlib
 import json
 from pathlib import Path
@@ -20,6 +21,9 @@ def archive(destination, files):
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--manual-only", action="store_true", help="Build only the GitHub manual-install package")
+    args = parser.parse_args()
     manifest = json.loads((EXTENSION / "manifest.json").read_text(encoding="utf-8"))
     OUTPUT.mkdir(exist_ok=True)
     extension_files = []
@@ -38,13 +42,16 @@ def main():
     manual = OUTPUT / "Clique-Limpo.zip"
     store = OUTPUT / "Clique-Limpo-loja.zip"
     archive(manual, manual_files)
-    archive(store, extension_files)
-    for destination, manifest_path in [(manual, "clique-limpo/manifest.json"), (store, "manifest.json")]:
+    packages = [(manual, "clique-limpo/manifest.json")]
+    if not args.manual_only:
+        archive(store, extension_files)
+        packages.append((store, "manifest.json"))
+    for destination, manifest_path in packages:
         with ZipFile(destination) as bundle:
             if bundle.testzip() is not None or json.loads(bundle.read(manifest_path))["version"] != manifest["version"]:
                 raise ValueError("Invalid release archive")
         print("{}: version {} ({} bytes)".format(destination.name, manifest["version"], destination.stat().st_size))
-    checksums = "".join("{}  {}\n".format(hashlib.sha256(destination.read_bytes()).hexdigest(), destination.name) for destination in [manual, store])
+    checksums = "".join("{}  {}\n".format(hashlib.sha256(destination.read_bytes()).hexdigest(), destination.name) for destination, _ in packages)
     (OUTPUT / "SHA256SUMS.txt").write_text(checksums, encoding="utf-8")
 
 

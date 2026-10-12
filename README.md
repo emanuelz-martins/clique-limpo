@@ -16,7 +16,7 @@
 
 ## Instalação
 
-Versão atual: **1.0.6**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
+Versão atual: **1.1.0**. As próximas atualizações de correção avançam em `1.1.1`, `1.1.2` e assim por diante. A mudança do número intermediário depende da aprovação do mantenedor.
 
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
