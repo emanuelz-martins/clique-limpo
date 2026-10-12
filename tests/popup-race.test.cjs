@@ -141,6 +141,13 @@ test('TopFlix: frames síncronos, alvos externos e carregadores alternativos', {
       await installAttack('window');
       await page.evaluate(() => document.getElementById('play').click());
       assert.equal(await page.evaluate(() => window.attackBlocked), true, 'O hook continua contendo aberturas no segundo plano');
+      const formsBefore = formRequests.length;
+      await page.evaluate(action => {
+        const form = document.createElement('form'); form.action = action; form.target = '_blank'; document.body.append(form);
+        form.requestSubmit(); form.remove();
+      }, `${external}/form`);
+      await page.waitForTimeout(150);
+      assert.equal(formRequests.length, formsBefore, 'Um formulário sem interação também é bloqueado no segundo plano');
       await worker.evaluate(() => initialize());
       assert.equal((await worker.evaluate(() => chrome.declarativeNetRequest.getSessionRules())).length, 6, 'Reinicialização recupera as regras da sessão');
       await other.close(); await page.bringToFront(); await wait(async () => (await status()).enabled);
@@ -179,6 +186,28 @@ test('TopFlix: frames síncronos, alvos externos e carregadores alternativos', {
       await page.waitForTimeout(150);
       assert.equal(formRequests.length, before, 'Nenhuma navegação foi autorizada para o formulário invisível');
       await page.locator('#fake-form').evaluate(el => el.remove());
+    });
+    await t.test('href alterado durante pointerdown não muda o destino autorizado', async () => {
+      await page.evaluate(({ url, ad }) => {
+        const link = document.createElement('a'); link.id = 'mutated-link'; link.href = url; link.target = '_blank'; link.textContent = 'Destino legítimo'; document.body.append(link);
+        window.addEventListener('pointerdown', event => { if (event.target === link) link.href = ad; }, true);
+      }, { url: `${external}/outside?original=1`, ad: `${external}/advert` });
+      const opened = context.waitForEvent('page'); await page.locator('#mutated-link').click(); const child = await opened;
+      try { await child.waitForURL(`${external}/outside?original=1`); }
+      finally { await child.close(); await page.bringToFront(); await page.locator('#mutated-link').evaluate(el => el.remove()); }
+      await wait(async () => (await status()).enabled);
+    });
+    await t.test('target de iframe existente preserva o player, sem criar outra aba', async () => {
+      await page.evaluate(url => {
+        const frame = document.createElement('iframe'); frame.name = 'PlayerArea'; frame.id = 'existing-player'; document.body.append(frame);
+        const link = document.createElement('a'); link.href = url; link.target = 'PlayerArea'; link.id = 'player-link'; link.textContent = 'Carregar player'; document.body.append(link);
+      }, `${external}/outside?player=1`);
+      const pages = context.pages().length;
+      await page.locator('#player-link').click();
+      const frame = page.frames().find(frame => frame.name() === 'PlayerArea');
+      await frame.waitForURL(`${external}/outside?player=1`);
+      assert.equal(context.pages().length, pages);
+      await page.locator('#existing-player, #player-link').evaluateAll(elements => elements.forEach(el => el.remove()));
     });
     for (const mode of ['get', 'post', 'enter']) await t.test(`formulário ${mode} autorizado para nova aba`, async () => {
       const method = mode === 'enter' ? 'get' : mode;

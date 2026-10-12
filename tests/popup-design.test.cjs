@@ -39,11 +39,25 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
     const tabId = await worker.evaluate(async address => (await chrome.tabs.query({})).find(tab => tab.url?.startsWith(address)).id, address);
     const errors = [];
     let popup;
+    let staleStatusReply = false;
     const openPopup = async () => {
       if (popup) await popup.close();
       popup = await context.newPage();
       popup.on('pageerror', error => errors.push(error.message));
       await popup.setViewportSize({ width: 380, height: 600 });
+      if (staleStatusReply) await popup.addInitScript(id => {
+        if (!globalThis.chrome?.tabs?.sendMessage) return;
+        const original = chrome.tabs.sendMessage;
+        window.restoreStatusResponse = () => { chrome.tabs.sendMessage = original; };
+        chrome.tabs.sendMessage = async (...args) => {
+          const result = await Reflect.apply(original, chrome.tabs, args);
+          if (args[0] === id && args[1]?.type === 'STATUS' && result?.ready) {
+            window.staleStatusSeen = true;
+            return { ...result, enabled: false };
+          }
+          return result;
+        };
+      }, tabId);
       await page.bringToFront();
       await popup.goto(`chrome-extension://${extensionId}/popup.html`);
       await popup.waitForFunction(() => !document.getElementById('enabled').disabled || document.getElementById('status-pill').textContent === 'Indisponível');
@@ -134,23 +148,17 @@ test('Botão com carinha salva o estado e preserva a opção do player', { timeo
       const source = tabs.find(tab => tab.url?.startsWith('http://exemplo.test:'));
       return !(await chrome.tabs.sendMessage(source.id, { type: 'STATUS' }, { frameId: 0 })).enabled;
     });
-    // Hold the focus notification to reproduce the stale content snapshot that
-    // slower browsers can expose when the popup opens immediately on return.
-    await worker.evaluate(id => {
-      const original = notifyPage;
-      let release;
-      const hold = new Promise(resolve => { release = resolve; });
-      globalThis.releaseTestFocus = () => { notifyPage = original; release(); };
-      notifyPage = async tabId => { if (tabId === id) await hold; return original(tabId); };
-    }, tabId);
+    // Model the stale content reply at the messaging boundary. Session, current
+    // document and tab activation stay real, without timing assumptions.
+    staleStatusReply = true;
     try {
       await repository.close();
       await page.bringToFront();
       await openPopup();
       await waitForState(true);
-      assert.equal((await status()).enabled, false, 'A atualização visual permanece atrasada neste cenário');
+      assert.equal(await popup.evaluate(() => window.staleStatusSeen), true, 'O cenário forneceu uma resposta antiga do content script');
       assert.equal(await popup.locator('#enabled').getAttribute('aria-pressed'), 'true', 'O painel consulta a ativação real mesmo com o snapshot antigo');
-    } finally { await worker.evaluate(() => releaseTestFocus()); }
+    } finally { staleStatusReply = false; await popup.evaluate(() => window.restoreStatusResponse?.()); }
     assert.equal((await status()).documentId, afterActivation.documentId, 'Voltar à aba protegida não recarrega');
     assert.equal(pageRequests, 2);
     await popup.locator('.tracking').click({ position: { x: 8, y: 23 } });

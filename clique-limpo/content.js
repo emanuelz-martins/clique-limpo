@@ -2,6 +2,7 @@
   "use strict";
   const detector = globalThis.CliqueLimpoDetector;
   let enabled = false;
+  let popupProtection = false;
   let compatibility = false;
   let strictPopups = false;
   const embedded = window !== window.top;
@@ -215,25 +216,47 @@
     window.addEventListener(type, guard, { capture: true, passive: false });
   }
 
+  const linkIntents = new WeakMap();
+  const linkTarget = link => link.target || document.querySelector('base[target]')?.target || '_self';
+  for (const type of ['pointerdown', 'keydown']) window.addEventListener(type, event => {
+    if (!strictPopups || !popupProtection || !event.isTrusted || event.defaultPrevented || type === 'keydown' && event.key !== 'Enter') return;
+    const link = event.composedPath().find(node => node instanceof HTMLAnchorElement && node.href);
+    if (!link) return;
+    const intent = { url: link.href, target: linkTarget(link), expires: Date.now() + 5000 };
+    linkIntents.set(link, intent);
+    setTimeout(() => { if (linkIntents.get(link) === intent) linkIntents.delete(link); }, 5000);
+  }, true);
   function openInternalTab(event) {
-    if (!enabled || picking || !event.isTrusted || event.defaultPrevented || event.altKey) return;
+    if (!popupProtection || picking || !event.isTrusted || event.defaultPrevented || event.altKey) return;
     if (event.type === "click" && event.button !== 0 || event.type === "auxclick" && event.button !== 1) return;
     const link = event.composedPath().find(element => element instanceof HTMLAnchorElement && element.href);
     if (!link || link.hasAttribute("download")) return;
+    const intent = linkIntents.get(link);
+    linkIntents.delete(link);
+    const saved = intent?.expires > Date.now() ? intent : null;
+    const url = saved?.url || link.href;
+    const rawTarget = saved?.target || linkTarget(link);
+    const target = rawTarget.toLowerCase();
     const modified = event.ctrlKey || event.metaKey || event.type === "auxclick" && event.button === 1;
-    const target = (link.target || document.querySelector('base[target]')?.target || '_self').toLowerCase();
-    if (!modified && !event.shiftKey && ['_self', '_parent', '_top'].includes(target)) return;
+    const existingFrame = !['_self', '_parent', '_top', '_blank'].includes(target) && (Array.from(document.querySelectorAll('iframe[name],frame[name]')).some(frame => frame.name === rawTarget) || rawTarget === window.name);
+    const newContext = modified || event.shiftKey || !existingFrame && !['_self', '_parent', '_top'].includes(target);
     try {
-      const destination = new URL(link.href);
+      const destination = new URL(url);
       if (!/^https?:$/.test(destination.protocol) || !strictPopups && destination.origin !== new URL(pageUrl).origin) return;
       if (!link.getClientRects().length || getComputedStyle(link).visibility !== 'visible') return;
     } catch { return; }
+    if (!newContext) {
+      if (saved && (link.href !== url || linkTarget(link) !== rawTarget)) {
+        event.preventDefault(); event.stopImmediatePropagation();
+        window.open(url, rawTarget);
+      }
+      return;
+    }
     event.preventDefault();
     event.stopImmediatePropagation();
-    const url = link.href;
     void chrome.runtime.sendMessage({ type: "OPEN_PROTECTED_LINK", url, documentId, pageUrl, active: !modified, newWindow: event.shiftKey })
       .then(result => { if (!result?.ok) throw new Error(result?.error); })
-      .catch(() => { if (!globalThis.CliqueLimpoPopupPolicy.advertisement(url)) location.href = url; });
+      .catch(() => { if (!globalThis.CliqueLimpoPopupPolicy?.advertisement(url)) location.href = url; });
   }
   window.addEventListener("click", openInternalTab, true);
   window.addEventListener("auxclick", openInternalTab, true);
@@ -248,7 +271,7 @@
     };
   }
   function recordFormIntent(event) {
-    if (!strictPopups || !enabled || !event.isTrusted || event.defaultPrevented) return;
+    if (!strictPopups || !popupProtection || document.visibilityState !== 'visible' || !event.isTrusted || event.defaultPrevented) return;
     const control = event.composedPath().find(node => node instanceof HTMLButtonElement || node instanceof HTMLInputElement);
     if (!control?.form || !control.getClientRects().length || getComputedStyle(control).visibility !== 'visible') return;
     const submitter = ['submit', 'image'].includes(control.type) ? control : null;
@@ -265,7 +288,7 @@
   window.addEventListener('submit', event => {
     const form = event.target;
     if (authorizedForms.has(form)) return;
-    if (!strictPopups || !enabled || !event.isTrusted || event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
+    if (!strictPopups || !popupProtection || !event.isTrusted || event.defaultPrevented || !(form instanceof HTMLFormElement)) return;
     const submitter = event.submitter;
     const { target, action, method } = formDestination(form, submitter);
     if (['_self', '_parent', '_top'].includes(target)) return;
@@ -341,6 +364,7 @@
       documentId = config.documentId;
       pageUrl = config.pageUrl;
       enabled = config.enabled;
+      popupProtection = config.popupProtection === true || config.popupProtection === undefined && enabled;
       compatibility = config.compatibility === true;
       strictPopups = config.strictPopups === true;
       ready = true;
@@ -356,6 +380,7 @@
       }
     } catch {
       enabled = false;
+      popupProtection = false;
       window.dispatchEvent(new CustomEvent("clique-limpo:config", { detail: "disabled" }));
     }
   }
