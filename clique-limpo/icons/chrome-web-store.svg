@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+  <defs>
+    <mask id="chrome">
+      <rect width="24" height="24" fill="white"/>
+      <circle cx="12" cy="14" r="5" fill="none" stroke="black" stroke-width="1.1"/>
+      <circle cx="12" cy="14" r="2" fill="black"/>
+      <path d="M12 12h4.58M13.73 15l-2.29 3.97M10.27 15l-2.29-3.97" fill="none" stroke="black" stroke-width="1.1"/>
+    </mask>
+  </defs>
+  <path d="M8 7V5a4 4 0 0 1 8 0v2" fill="none" stroke="black" stroke-width="2"/>
+  <path d="M4.6 6h14.8l1.5 14a1.8 1.8 0 0 1-1.8 2H4.9a1.8 1.8 0 0 1-1.8-2Z" fill="black" mask="url(#chrome)"/>
+</svg>
