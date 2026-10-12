@@ -42,6 +42,8 @@ Mudanças devem preservar controles de players, eventos legítimos, desativaçã
 
 ## Versões
 
+A cada atualização entregue, incremente o último número: `1.0.1`, `1.0.2`, `1.0.3` e assim por diante. Essas versões identificam o ciclo de correções e validação pelo mantenedor. Só altere para `1.1.0` quando ele pedir explicitamente; uma bateria de testes aprovada não substitui essa decisão.
+
 Mantenha a mesma versão no manifesto, indicador de `popup.html`, `package.json` e nas duas entradas do projeto em `package-lock.json`. Atualize README e imagens quando a interface mudar.
 
 Uma tag `vX.Y.Z` deve corresponder à versão do manifesto. A verificação do GitHub Actions rejeita tags divergentes. Veja o [guia de publicação](PUBLICACAO.md).

@@ -17,6 +17,10 @@ $("tips-toggle").addEventListener("click", async () => {
   const enabled = $("tips-toggle").getAttribute("aria-pressed") !== "true";
   $("tips-toggle").disabled = true;
   try {
+    if (enabled) {
+      await chrome.storage.local.remove('help:sites');
+      await chrome.storage.session.remove('help:lastShown');
+    }
     await chrome.storage.local.set({ "help:enabled": enabled });
     renderTips(enabled);
     $("feedback").textContent = enabled ? "Dicas ativadas. Os avisos aparecem apenas quando há uma camada suspeita." : "Dicas desativadas. Você ainda pode ativar a proteção pela carinha.";

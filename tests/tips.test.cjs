@@ -17,6 +17,8 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       <style>body{font:16px Arial;background:#f4f3ef;color:#292929;margin:50px}h1{font-size:26px}button{padding:12px}iframe{width:700px;height:400px}</style>
       <script>window.siteClicks=0;document.addEventListener('click',()=>{window.siteClicks++;navigator.sendBeacon('/site-click');},true);</script>
       <h1>Uma página com conteúdo</h1><p>Uma dica discreta para entender a proteção.</p><button id="normal">Conteúdo normal</button>
+      ${request.url === '/generic' ? '<div id="overlay" style="position:fixed;inset:0;z-index:1000"></div>' : ''}
+      ${request.url === '/long' ? '<p>Conteúdo</p>'.repeat(2000) + trap : ''}
       ${request.url.startsWith('/trap') || request.url === '/frame' ? trap : ''}
       ${request.url === '/embedded' ? '<iframe src="/frame"></iframe>' : ''}`);
   });
@@ -84,7 +86,48 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       assert.equal((await status()).enabled, false);
     });
 
+    await t.test('camada transparente sem link também sugere proteção', async () => {
+      await freshHints();
+      await page.goto(`${address}/generic`);
+      await hint().waitFor({ state: 'visible' });
+      assert.equal((await status()).enabled, false);
+      assert.notEqual(await page.locator('#overlay').evaluate(el => getComputedStyle(el).display), 'none');
+      await hint().locator('.later').click();
+    });
+
+    await t.test('o aviso encontra camadas depois dos primeiros 1800 elementos', async () => {
+      await freshHints();
+      await page.goto(`${address}/long`);
+      await hint().waitFor({ state: 'visible' });
+      assert.equal((await status()).enabled, false);
+      await hint().locator('.later').click();
+    });
+
+    await t.test('pausar a reprodução permite retomar a inspeção sem mudar o DOM', async () => {
+      await freshHints();
+      await page.goto(`${address}/normal`);
+      await page.evaluate(async html => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = 80;
+        canvas.getContext('2d').fillRect(0, 0, 80, 80);
+        const video = document.createElement('video');
+        video.muted = true;
+        video.srcObject = canvas.captureStream(10);
+        document.body.append(video);
+        await video.play();
+        document.body.insertAdjacentHTML('beforeend', html);
+      }, trap);
+      await page.waitForTimeout(2400);
+      assert.equal(await hint().count(), 0, 'A dica não interrompe a reprodução');
+      await page.evaluate(() => {
+        document.querySelector('video').pause();
+      });
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.later').click();
+    });
+
     await t.test('camada transparente sugere ativação; clique no aviso é protegido', async () => {
+      await freshHints();
       await page.goto(`${address}/trap`);
       await hint().waitFor({ state: 'visible' });
       assert.equal((await status()).enabled, false);
@@ -144,10 +187,6 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       await page.waitForTimeout(2300);
       assert.equal(await hint().count(), 0);
       await page.goto(`${address}/normal`);
-      await worker.evaluate(async () => {
-        await chrome.storage.local.remove('help:sites');
-        await chrome.storage.session.remove('help:lastShown');
-      });
       const popup = await openPopup();
       assert.equal(await popup.locator('#tips-toggle').getAttribute('aria-pressed'), 'false');
       await popup.locator('#tips-toggle').click();

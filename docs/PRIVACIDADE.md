@@ -1,6 +1,6 @@
 # Política de privacidade
 
-Esta política descreve o comportamento do Clique Limpo 1.0.0 consolidado.
+Esta política descreve o comportamento do Clique Limpo 1.0.1.
 
 ## Processamento de páginas
 
@@ -26,7 +26,7 @@ As listas de domínios bloqueados são incluídas no pacote; não são baixadas 
 
 ## Controle do usuário
 
-A ativação é manual. O usuário pode pausar a proteção, restaurar elementos ocultados e desligar as dicas. Para excluir as preferências e os registros locais da extensão, desinstale-a pelo gerenciador de extensões do navegador. Recarregue as páginas para remover os scripts e alterações da visita atual.
+A ativação é manual. O usuário pode pausar a proteção, restaurar elementos ocultados e desligar as dicas. Desativar e reativar as dicas no painel limpa os registros de frequência dos avisos. Para excluir todas as preferências e os registros locais da extensão, desinstale-a pelo gerenciador de extensões do navegador. Recarregue as páginas para remover os scripts e alterações da visita atual.
 
 ## Serviços do navegador
 

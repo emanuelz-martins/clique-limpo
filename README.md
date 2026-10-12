@@ -16,6 +16,8 @@
 
 ## Instalação
 
+Versão atual: **1.0.1**. As atualizações de correção avançam em `1.0.1`, `1.0.2` e assim por diante. A mudança para `1.1.0` depende da aprovação do mantenedor.
+
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
 ### Chrome e Edge
@@ -40,7 +42,7 @@ A instalação pelo botão da loja, com confirmação do navegador e atualizaç�
 Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. Protege interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente na aba, sem exigir conta, assinatura ou servidor de análise. O processamento das páginas acontece no navegador.
 
 | Ação | Comportamento |
-| | --- | --- |
+| --- | --- |
 | Ativar pela carinha ou por uma dica | Protege o site naquela aba e recarrega a página uma vez. |
 | Navegar para outra página do mesmo site | Mantém a proteção, inclusive ao recarregar ou usar o histórico. |
 | Abrir um link interno em nova aba | A nova aba herda a ativação. |
@@ -75,11 +77,15 @@ Para sair de **Escolher elemento para ocultar**, pressione **Esc** ou use **Canc
 
 As dicas usam uma inspeção local e limitada, sem ativar o bloqueio sozinhas. O usuário pode selecionar **Ativar proteção**, **Agora não** ou **Não mostrar mais dicas**. A preferência pode ser ajustada no painel.
 
+As buscas incluem camadas transparentes sem link e continuam em pequenos lotes nas páginas grandes. Durante reprodução de áudio ou vídeo, a inspeção aguarda; pode retomar ao pausar ou encerrar a reprodução.
+
 Para evitar interrupções, os avisos respeitam um intervalo global de dez minutos na sessão e aparecem no máximo uma vez por origem a cada sete dias. Desaparecem após 25 segundos, ao trocar de aba ou ao fechar a guia.
+
+Para permitir novos avisos após uma dica anterior, desative e reative **Dicas** no rodapé do painel. Isso limpa os intervalos anteriores. Os avisos continuam dependendo da detecção de uma camada suspeita, com a proteção desativada.
 
 ## Privacidade e permissões
 
-Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das regras de proteção por site.
+Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das dicas e até 64 origens de sites com datas dos avisos para controlar sua frequência.
 
 | Permissão | Finalidade |
 | --- | --- |
