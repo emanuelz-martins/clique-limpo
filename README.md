@@ -6,16 +6,13 @@
   [![Issues](https://img.shields.io/github/issues/emanuelz-martins/clique-limpo?style=flat-square)](https://github.com/emanuelz-martins/clique-limpo/issues)
   [![Forks](https://img.shields.io/github/forks/emanuelz-martins/clique-limpo?style=flat-square)](https://github.com/emanuelz-martins/clique-limpo/network)
   [![Watchers](https://img.shields.io/github/watchers/emanuelz-martins/clique-limpo?style=flat-square)](https://github.com/emanuelz-martins/clique-limpo/watchers)
-
+  
 </div>
-
-Extensão gratuita para Chrome e Microsoft Edge que ajuda a proteger interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente na aba, sem exigir conta, assinatura ou servidor de análise. O processamento das páginas acontece no navegador.
-
-**Versão atual: 1.0.0 consolidada.** Não exige conta, assinatura, servidor de análise ou outro bloqueador. O processamento das páginas acontece no navegador.
 
 <div align="center">
-  <img src="docs/images/painel.png" alt="Painel do Clique Limpo com a proteção ativada" width="80%" />
+  <img src="docs/images/painel.png" alt="Painel do Clique Limpo com a proteção ativada" width="50%" />
 </div>
+
 
 ## Instalação
 
@@ -40,7 +37,7 @@ A instalação pelo botão da loja, com confirmação do navegador e atualizaç�
 
 ## Como usar
 
-Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. A extensão ativa as regras de proteção e recarrega a página automaticamente para aplicar a proteção na navegação ativa.
+Abra o site que deseja proteger e clique no ícone do Clique Limpo. No painel, pressione o botão com a carinha. Protege interações em páginas com camadas transparentes, pop-ups e redirecionamentos publicitários. A proteção é ativada manualmente na aba, sem exigir conta, assinatura ou servidor de análise. O processamento das páginas acontece no navegador.
 
 | Ação | Comportamento |
 | | --- | --- |
@@ -124,6 +121,6 @@ O GitHub Actions verifica o projeto, executa os testes e gera artefatos. Ele nã
 
 As releases do GitHub não atualizam instalações manuais automaticamente. Veja os guias de [desenvolvimento](docs/DESENVOLVIMENTO.md) e [publicação](docs/PUBLICACAO.md).
 
-Para informar um problema, abra uma [issue](https://github.com/emanuelz-martins/clique-limpo/issues) com navegador, versão da extensão e passos para reproduzir. Remova informações pessoais antes de enviar dados ou capturas.
+Para informar um problema, abra uma [issue](https://github.com/emanuelz-martins/clique-limpo/issues) com navegador, versão da extensão e passos para reproduzir.
 
 O ícone do GitHub é do projeto [Octicons](https://github.com/primer/octicons), sob [licença MIT](clique-limpo/icons/GITHUB-LICENSE.txt).
