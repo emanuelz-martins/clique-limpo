@@ -6,7 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { chromium } = require('playwright');
 
-test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repetição', { timeout: 120000 }, async t => {
+test('Dicas orientam sem ativar sozinhas e sem limites de frequência', { timeout: 120000 }, async t => {
   let receivedSiteClicks = 0;
   const trap = '<a id="trap" href="#ad" style="position:fixed;inset:0;z-index:1000"></a>';
   const server = http.createServer((request, response) => {
@@ -147,11 +147,12 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       const state = await status();
       await worker.evaluate(message => enqueue(() => setPageEnabled(message)), { tabId: id, documentId: state.documentId, pageUrl: state.pageUrl, enabled: false });
       await waitForState(false);
-      await page.waitForTimeout(2100);
-      assert.equal(await hint().count(), 0, 'Pausar manualmente não provoca uma nova dica');
+      await hint().waitFor({ state: 'visible' });
+      assert.equal((await status()).enabled, false, 'Desativar permite avisar novamente sem reativar a proteção');
+      await hint().locator('.later').click();
     });
 
-    await t.test('Agora não mantém desligado e os limites evitam repetição', async () => {
+    await t.test('avisos voltam na mesma página, após recarregar e em outro site sem cotas', async () => {
       await freshHints();
       await page.goto(`${address}/trap?dismiss`);
       await hint().waitFor({ state: 'visible' });
@@ -159,21 +160,22 @@ test('Dicas orientam sem ativar sozinhas, sem cliques publicitários e sem repet
       await hint().waitFor({ state: 'detached' });
       assert.equal((await status()).enabled, false);
       assert.equal(await page.evaluate(() => window.siteClicks), 0);
-      await page.reload();
-      await page.waitForTimeout(2400);
-      assert.equal(await hint().count(), 0, 'Mesmo site não repete a dica durante sete dias');
-      await page.goto(`${otherAddress}/trap`);
-      await page.waitForTimeout(2400);
-      assert.equal(await hint().count(), 0, 'Outro site respeita o intervalo global de dez minutos');
-      await worker.evaluate(() => chrome.storage.session.set({ 'help:lastShown': Date.now() - 11 * 60 * 1000 }));
+      await hint().waitFor({ state: 'visible', timeout: 12000 });
+      assert.equal(await hint().count(), 1, 'A inspeção retoma e mantém somente um aviso por vez');
+      await hint().locator('.later').click();
+      await worker.evaluate(async origin => {
+        await chrome.storage.local.set({ 'help:sites': { [origin]: Date.now() } });
+        await chrome.storage.session.set({ 'help:lastShown': Date.now() });
+      }, new URL(address).origin);
       await page.reload();
       await hint().waitFor({ state: 'visible' });
       await hint().locator('.later').click();
+      await page.goto(`${otherAddress}/trap`);
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.later').click();
       await page.goto(`${address}/trap`);
-      await worker.evaluate(() => chrome.storage.session.set({ 'help:lastShown': Date.now() - 11 * 60 * 1000 }));
-      await page.reload();
-      await page.waitForTimeout(2400);
-      assert.equal(await hint().count(), 0, 'O limite por site continua válido após o intervalo global');
+      await hint().waitFor({ state: 'visible' });
+      await hint().locator('.later').click();
     });
 
     await t.test('dicas podem ser desativadas e reativadas pelo painel, inclusive para camadas tardias', async () => {

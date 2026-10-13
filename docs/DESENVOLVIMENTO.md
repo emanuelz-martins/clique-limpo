@@ -23,7 +23,7 @@ Os arquivos de testes de navegador executam em sequência: eles dependem de foco
 | `npm test` | Executa testes de proteção, navegação, painel e dicas. |
 | `npm run test:design` | Verifica o painel e captura imagens. |
 | `npm run test:pages` | Verifica ativação e navegação por abas e origem. |
-| `npm run test:tips` | Verifica orientação, avisos, dispensa e frequência. |
+| `npm run test:tips` | Verifica orientação, avisos, repetição e desativação. |
 | `npm run test:popups` | Reproduz a corrida de iframe do TopFlix, testa contenção, carregadores e aberturas legítimas. |
 | `npm run demo` | Serve a demonstração em `http://127.0.0.1:4173`. |
 | `npm run icons` | Gera PNGs a partir dos SVGs do projeto. |
@@ -32,7 +32,7 @@ Os arquivos de testes de navegador executam em sequência: eles dependem de foco
 
 ## Código
 
-- `background.js`: ativação, navegação, rede, ícones e frequência das dicas.
+- `background.js`: ativação, navegação, rede, ícones e autorização das dicas.
 - `detector.js`: heurísticas de inspeção dos elementos.
 - `content.js`: varredura, ocultação, restauração, seleção manual e estado do documento.
 - `popup-guard.js`: interceptadores no contexto da página e ajustes de players.

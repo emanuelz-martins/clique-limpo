@@ -1,6 +1,6 @@
 # Política de privacidade
 
-Esta política descreve o comportamento do Clique Limpo 1.1.0.
+Esta política descreve o comportamento do Clique Limpo 1.1.1.
 
 ## Processamento de páginas
 
@@ -14,9 +14,8 @@ O armazenamento local, sem sincronização entre dispositivos, contém:
 
 - Preferências do player associadas ao domínio do site.
 - Preferência de exibição de dicas e confirmação da orientação inicial.
-- Até 64 origens de sites que receberam uma dica, com a data do aviso, para limitar a repetição. Uma origem contém protocolo, domínio e porta, sem o caminho da página.
 
-O armazenamento de sessão contém a ativação por aba e origem, o endereço da última página protegida para restaurar desvios conhecidos, as associações de abas abertas com autorização e o horário do último aviso global. A validação de formulários usa um hash SHA-256 do destino, o identificador do documento e um prazo de três segundos, sem armazenar os campos do formulário nem seu destino em texto nessa autorização. Autorizações expiradas não são aceitas e são removidas na reinicialização do serviço; fechar a aba de origem ou desativar a proteção remove suas autorizações. A ativação não é preservada após reiniciar o navegador ou recarregar a extensão. Contadores e elementos ocultados são mantidos no documento da página.
+O armazenamento de sessão contém a ativação por aba e origem, o endereço da última página protegida para restaurar desvios conhecidos, as associações de abas abertas com autorização. A validação de formulários usa um hash SHA-256 do destino, o identificador do documento e um prazo de três segundos, sem armazenar os campos do formulário nem seu destino em texto nessa autorização. Autorizações expiradas não são aceitas e são removidas na reinicialização do serviço; fechar a aba de origem ou desativar a proteção remove suas autorizações. A ativação não é preservada após reiniciar o navegador ou recarregar a extensão. Contadores e elementos ocultados são mantidos no documento da página.
 
 ## Permissões
 
@@ -26,7 +25,7 @@ As listas de domínios bloqueados são incluídas no pacote; não são baixadas 
 
 ## Controle do usuário
 
-A ativação é manual. O usuário pode pausar a proteção, restaurar elementos ocultados e desligar as dicas. Desativar e reativar as dicas no painel limpa os registros de frequência dos avisos. Para excluir todas as preferências e os registros locais da extensão, desinstale-a pelo gerenciador de extensões do navegador. Recarregue as páginas para remover os scripts e alterações da visita atual.
+A ativação é manual. O usuário pode pausar a proteção, restaurar elementos ocultados e desligar as dicas. Os avisos não guardam histórico de frequência por site. Registros desse tipo deixados pelas versões anteriores são removidos ao iniciar o serviço da extensão. Para excluir todas as preferências e os registros locais da extensão, desinstale-a pelo gerenciador de extensões do navegador. Recarregue as páginas para remover os scripts e alterações da visita atual.
 
 ## Serviços do navegador
 

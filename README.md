@@ -16,7 +16,7 @@
 
 ## Instalação
 
-Versão atual: **1.1.0**. As próximas atualizações de correção avançam em `1.1.1`, `1.1.2` e assim por diante. A mudança do número intermediário depende da aprovação do mantenedor.
+Versão atual: **1.1.1**. As próximas atualizações de correção avançam em `1.1.2`, `1.1.3` e assim por diante. A mudança do número intermediário depende da aprovação do mantenedor.
 
 [Baixar a versão mais recente](https://github.com/emanuelz-martins/clique-limpo/releases/latest/download/Clique-Limpo.zip) · [Consultar versões](https://github.com/emanuelz-martins/clique-limpo/releases)
 
@@ -87,18 +87,18 @@ As dicas usam uma inspeção local e limitada, sem ativar o bloqueio sozinhas. O
 
 As buscas incluem camadas transparentes sem link e continuam em pequenos lotes nas páginas grandes. Durante reprodução de áudio ou vídeo, a inspeção aguarda; pode retomar ao pausar ou encerrar a reprodução.
 
-Para evitar interrupções, os avisos respeitam um intervalo global de dez minutos na sessão e aparecem no máximo uma vez por origem a cada sete dias. Desaparecem após 25 segundos, ao trocar de aba ou ao fechar a guia.
+Não há limite de avisos por site nem intervalo obrigatório entre visitas. Com a proteção desativada e as dicas ligadas, a inspeção pode sugerir a ativação sempre que encontrar uma camada suspeita. Apenas um aviso aparece por vez. Ele desaparece após 25 segundos, ao trocar de aba ou ao ativar a proteção; se a camada continuar presente, uma nova inspeção pode exibir outra dica.
 
-Para permitir novos avisos após uma dica anterior, desative e reative **Dicas** no rodapé do painel. Isso limpa os intervalos anteriores. Os avisos continuam dependendo da detecção de uma camada suspeita, com a proteção desativada.
+Use **Dicas** no rodapé do painel para ligar ou desligar os avisos. **Agora não** fecha o aviso atual, mantendo a extensão desativada e a inspeção disponível para novas sugestões.
 
 ## Privacidade e permissões
 
-Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das dicas e até 64 origens de sites com datas dos avisos para controlar sua frequência.
+Não há telemetria, sincronização de preferências, código remoto ou envio de conteúdo das páginas para um serviço da extensão. O armazenamento local contém preferências do player e das dicas. Não há histórico de frequência dos avisos por site.
 
 | Permissão | Finalidade |
 | --- | --- |
 | Acesso a páginas HTTP e HTTPS | Inspecionar camadas e aplicar proteção na página principal e nos frames. |
-| `storage` | Guardar preferências, frequência de dicas e estado da sessão. |
+| `storage` | Guardar preferências e estado da sessão. |
 | `webNavigation` | Acompanhar navegação no site e novas abas abertas por links internos. |
 | `declarativeNetRequestWithHostAccess` | Aplicar regras de rede limitadas às abas protegidas. |
 

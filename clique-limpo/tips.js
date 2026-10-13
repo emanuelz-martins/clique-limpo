@@ -4,7 +4,6 @@
   const topFrame = window === window.top;
   let config = {};
   let tipsEnabled = true;
-  let stopped = false;
   let timer;
   let toast;
   let lastScan = 0;
@@ -20,11 +19,13 @@
   const face = "<svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"3 -7.5 78 78\"><path fill=\"#171717\" d=\"M 72.488281 6.679688 C 75.371094 6.679688 77.707031 9.015625 77.707031 11.898438 L 77.707031 31.386719 C 77.707031 32.515625 77.339844 33.613281 76.664062 34.515625 L 61.527344 54.699219 C 60.542969 56.011719 58.992188 56.785156 57.351562 56.785156 L 27.078125 56.785156 C 25.4375 56.785156 23.890625 56.011719 22.902344 54.699219 L 7.769531 34.515625 C 7.089844 33.613281 6.726562 32.515625 6.726562 31.386719 L 6.726562 11.898438 C 6.726562 9.015625 9.0625 6.679688 11.945312 6.679688 Z M 11.109375 32.011719 C 10.972656 31.832031 10.898438 31.609375 10.898438 31.386719 L 10.898438 11.898438 C 10.898438 11.324219 11.367188 10.855469 11.945312 10.855469 L 72.488281 10.855469 C 73.0625 10.855469 73.53125 11.324219 73.53125 11.898438 L 73.53125 31.386719 C 73.53125 31.609375 73.457031 31.832031 73.320312 32.011719 L 58.1875 52.191406 L 58.148438 52.242188 C 57.964844 52.457031 57.699219 52.589844 57.414062 52.609375 L 27.019531 52.609375 C 26.710938 52.589844 26.429688 52.4375 26.246094 52.191406 Z M 11.109375 32.011719 \" fill-opacity=\"1\" fill-rule=\"evenodd\"/><path fill=\"#f7f7f7\" d=\"M 10.898438 31.386719 C 10.898438 31.609375 10.972656 31.832031 11.109375 32.011719 L 26.246094 52.191406 C 26.429688 52.4375 26.710938 52.589844 27.019531 52.609375 L 57.414062 52.609375 C 57.699219 52.589844 57.964844 52.457031 58.148438 52.242188 L 58.1875 52.191406 L 73.320312 32.011719 C 73.457031 31.832031 73.53125 31.609375 73.53125 31.386719 L 73.53125 11.898438 C 73.53125 11.324219 73.0625 10.855469 72.488281 10.855469 L 11.945312 10.855469 C 11.367188 10.855469 10.898438 11.324219 10.898438 11.898438 Z M 10.898438 31.386719 \" fill-opacity=\"1\" fill-rule=\"nonzero\"/><path fill=\"#171717\" d=\"M 26.558594 20.25 C 26.558594 19.675781 27.023438 19.207031 27.601562 19.207031 L 29.6875 19.207031 C 30.265625 19.207031 30.734375 19.675781 30.734375 20.25 L 30.734375 30.6875 C 30.734375 31.265625 30.265625 31.734375 29.6875 31.734375 L 27.601562 31.734375 C 27.023438 31.734375 26.558594 31.265625 26.558594 30.6875 Z M 26.558594 20.25 \" fill-opacity=\"1\" fill-rule=\"nonzero\"/><path fill=\"#171717\" d=\"M 53.699219 20.25 C 53.699219 19.675781 54.164062 19.207031 54.742188 19.207031 L 56.828125 19.207031 C 57.40625 19.207031 57.875 19.675781 57.875 20.25 L 57.875 30.6875 C 57.875 31.265625 57.40625 31.734375 56.828125 31.734375 L 54.742188 31.734375 C 54.164062 31.734375 53.699219 31.265625 53.699219 30.6875 Z M 53.699219 20.25 \" fill-opacity=\"1\" fill-rule=\"nonzero\"/><path d=\"M 34.4 44.7 L 38.3 39.8 H 46.1 L 50 44.7\" fill=\"none\" stroke=\"#171717\" stroke-width=\"4.175\" stroke-linecap=\"round\" stroke-linejoin=\"round\"/></svg>";
 
   function closeToast() {
-    toast?.remove();
+    if (!toast) return;
+    toast.remove();
     toast = null;
+    watch();
   }
   function canScan() {
-    return tipsEnabled && !stopped && config.documentId && !config.enabled && document.visibilityState === "visible";
+    return tipsEnabled && !toast && config.documentId && !config.enabled && document.visibilityState === "visible";
   }
   function stop() {
     clearTimeout(timer);
@@ -68,9 +69,8 @@
           scanning = false;
           if (topFrame) await offerHint();
           else {
-            stopped = true;
-            stop();
             await chrome.runtime.sendMessage({ type: "HINT_CANDIDATE" }).catch(() => {});
+            watch();
           }
           return;
         }
@@ -88,12 +88,11 @@
     claimPending = true;
     try {
       const result = await chrome.runtime.sendMessage({ type: "CLAIM_HINT", documentId: config.documentId });
-      if (!result?.show) { stopped = true; stop(); return; }
-      stopped = true;
+      if (!result?.show) return;
       stop();
       if (!config.enabled && tipsEnabled && document.visibilityState === "visible") showToast();
     } catch { /* Missing permissions or an extension reload must not affect the page. */ }
-    finally { claimPending = false; }
+    finally { claimPending = false; if (!toast) watch(); }
   }
   function showToast() {
     const host = document.createElement('div');
@@ -155,10 +154,8 @@
   }
   globalThis.CliqueLimpoTips = Object.freeze({
     update(next) {
-      const wasEnabled = config.enabled;
       config = next;
-      if (next.enabled || wasEnabled || !tipsEnabled) {
-        if (wasEnabled && !next.enabled) stopped = true;
+      if (next.enabled || !tipsEnabled) {
         closeToast(); stop();
       } else watch();
     },
@@ -178,6 +175,6 @@
   chrome.storage.onChanged.addListener((changes, area) => {
     if (area !== 'local' || !changes['help:enabled']) return;
     tipsEnabled = changes['help:enabled'].newValue !== false;
-    if (!tipsEnabled) { stop(); closeToast(); } else { stopped = false; watch(); }
+    if (!tipsEnabled) { stop(); closeToast(); } else watch();
   });
 })();

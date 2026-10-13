@@ -86,6 +86,10 @@ async function deactivatePage(tabId) {
 }
 
 async function initialize() {
+  await Promise.all([
+    chrome.storage.local.remove('help:sites'),
+    chrome.storage.session.remove('help:lastShown')
+  ]);
   // Migrate previous releases, whose rules and enabled preferences were global.
   await chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: ruleIds });
   const session = await chrome.storage.session.get(null);
@@ -281,17 +285,8 @@ async function claimHint(message, sender) {
   const config = await configForTab(sender.tab.id);
   const tab = await chrome.tabs.get(sender.tab.id);
   if (!tab.active || config.enabled || config.documentId !== message.documentId) return { show: false };
-  const origin = siteOrigin(config.pageUrl);
-  const [local, session] = await Promise.all([
-    chrome.storage.local.get(['help:enabled', 'help:sites']), chrome.storage.session.get('help:lastShown')
-  ]);
-  const now = Date.now();
-  if (!origin || local['help:enabled'] === false || now - (session['help:lastShown'] || 0) < 10 * 60 * 1000 ||
-      now - (local['help:sites']?.[origin] || 0) < 7 * 24 * 60 * 60 * 1000) return { show: false };
-  const sites = Object.fromEntries(Object.entries({ ...local['help:sites'], [origin]: now }).sort((a, b) => b[1] - a[1]).slice(0, 64));
-  await chrome.storage.local.set({ 'help:sites': sites });
-  await chrome.storage.session.set({ 'help:lastShown': now });
-  return { show: true };
+  const local = await chrome.storage.local.get('help:enabled');
+  return { show: supported(config.pageUrl) && local['help:enabled'] !== false };
 }
 chrome.runtime.onMessage.addListener((message, sender, respond) => {
   if (message?.type === 'AUTHORIZE_FORM_TARGET' && Number.isInteger(sender.tab?.id)) {
